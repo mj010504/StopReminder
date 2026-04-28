@@ -1,0 +1,56 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up local.properties
+        run: echo "${{ secrets.LOCAL_PROPERTIES }}" > ./local.properties
+
+      - name: Set up google-services.json
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICES }}' | base64 -d > app/google-services.json
+
+      - name: Upload config files
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-files
+          retention-days: 1
+          path: |
+            local.properties
+            app/google-services.json
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Code style checks
+        run: ./gradlew ktlintCheck detekt --build-cache --parallel
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Run build
+        run: ./gradlew assembleDebug --build-cache --parallel --stacktrace
