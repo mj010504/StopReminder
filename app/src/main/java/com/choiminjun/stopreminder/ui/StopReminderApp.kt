@@ -8,6 +8,6 @@ internal fun StopReminderApp(
     appState: AppState,
 ) {
     AppNavHost(
-        navController = appState.navController
+        navController = appState.navController,
     )
 }

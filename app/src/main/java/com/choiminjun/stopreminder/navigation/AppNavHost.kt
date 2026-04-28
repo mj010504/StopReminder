@@ -6,7 +6,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.choiminjun.home.navigation.homeGraph
 import com.choiminjun.navigation.HomeBaseRoute
-import com.choiminjun.navigation.HomeGraph
 
 @Composable
 fun AppNavHost(

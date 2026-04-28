@@ -2,8 +2,8 @@ plugins {
     id("stopreminder.android.application")
     id("stopreminder.android.compose")
     alias(libs.plugins.android.application)
-//    alias(libs.plugins.firebase.crashlytics)
-//    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -24,7 +24,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }

@@ -7,6 +7,7 @@ import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.text.get
 
 internal fun Project.configureKotlinAndroid() {
     plugins.apply("org.jetbrains.kotlin.android")
@@ -44,6 +45,8 @@ internal fun Project.configureKotlinAndroid() {
         add("implementation", platform(bom))
         add("implementation", libs.findLibrary("firebase-analytics").get())
         add("implementation", libs.findLibrary("firebase-crashlytics").get())
+
+        "detektPlugins"(libs.findLibrary("detekt.formatting").get())
     }
 
     configureKotlin()
