@@ -12,10 +12,6 @@ internal fun Project.configureAndroidCompose() {
     val libs = extensions.libs
 
     androidExtension.apply {
-        composeOptions {
-            kotlinCompilerExtensionVersion = "1.5.15"
-        }
-
         buildFeatures.apply {
             compose = true
         }

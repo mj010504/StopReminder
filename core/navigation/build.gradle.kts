@@ -8,6 +8,5 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.navigation.ui)
     implementation(libs.kotlinx.serialization.json)
 }

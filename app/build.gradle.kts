@@ -1,7 +1,6 @@
 plugins {
     id("stopreminder.android.application")
     id("stopreminder.android.compose")
-    alias(libs.plugins.android.application)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.google.services)
 }

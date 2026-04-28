@@ -41,11 +41,6 @@ internal fun Project.configureKotlinAndroid() {
 
     val libs = extensions.libs
     dependencies {
-        val bom = libs.findLibrary("firebase-bom").get()
-        add("implementation", platform(bom))
-        add("implementation", libs.findLibrary("firebase-analytics").get())
-        add("implementation", libs.findLibrary("firebase-crashlytics").get())
-
         "detektPlugins"(libs.findLibrary("detekt.formatting").get())
     }
 
@@ -61,11 +56,7 @@ internal fun Project.configureKotlin() {
 
             val warningsAsErrors: String? by project
             allWarningsAsErrors.set(warningsAsErrors.toBoolean())
-            freeCompilerArgs.set(
-                freeCompilerArgs.get() + listOf(
-                    "-opt-in=kotlin.RequiresOptIn",
-                )
-            )
+            freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
         }
     }
 }

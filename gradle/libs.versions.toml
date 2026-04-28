@@ -53,7 +53,7 @@ uiautomator = "2.3.0"
 # Static Analysis
 detekt = "1.23.8"
 ktlint-gradle = "12.1.1"
-ktlint-source = "0.50.0" # https://github.com/google/ksp/releases
+ktlint-source = "0.50.0"
 
 ## firebase
 firebaseBom = "34.12.0"
