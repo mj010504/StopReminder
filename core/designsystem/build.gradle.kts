@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "com.choiminjun.designsystem"
 }
+
+dependencies {
+    implementation(libs.androidx.compose.material.icons)
+}
