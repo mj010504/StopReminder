@@ -1,5 +1,6 @@
 package com.choiminjun.designsystem.theme
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 // ─── Cool Neutral ───
@@ -70,64 +71,105 @@ val Yellow60 = Color(0xFFC29200)
 val Yellow46 = Color(0xFF8C6900)
 val Yellow30 = Color(0xFF523D00)
 
-// ─── Violet ───
-val Violet99 = Color(0xFFF7F4FF)
-val Violet95 = Color(0xFFE8DEFF)
-val Violet50 = Color(0xFF5429D7)
+@Immutable
+data class SRColors(
+    // coolNeutral
+    val coolNeutral99: Color,
+    val coolNeutral98: Color,
+    val coolNeutral97: Color,
+    val coolNeutral96: Color,
+    val coolNeutral95: Color,
+    val coolNeutral90: Color,
+    val coolNeutral80: Color,
+    val coolNeutral70: Color,
+    val coolNeutral60: Color,
+    val coolNeutral50: Color,
+    val coolNeutral40: Color,
+    val coolNeutral30: Color,
+    val coolNeutral25: Color,
+    val coolNeutral23: Color,
+    val coolNeutral22: Color,
+    val coolNeutral20: Color,
+    val coolNeutral17: Color,
+    val coolNeutral15: Color,
+    val coolNeutral10: Color,
+    val coolNeutral7: Color,
+    val coolNeutral5: Color,
 
-// ─── Semantic — Light ───
-val SemanticBgBase = Color.White
-val SemanticBgElevated = Color.White
-val SemanticBgSubtle = CoolNeutral98
-val SemanticBgMuted = CoolNeutral96
-val SemanticBgInverse = CoolNeutral10
-val SemanticBgScrim = Color(0x80000000)
+    // blue
+    val blue99: Color,
+    val blue95: Color,
+    val blue90: Color,
+    val blue80: Color,
+    val blue70: Color,
+    val blue60: Color,
+    val blue50: Color,
+    val blue40: Color,
+    val blue30: Color,
+    val blue22: Color,
+    val blue20: Color,
+    val blue15: Color,
+    val blue10: Color,
 
-val SemanticFgPrimary = CoolNeutral10
-val SemanticFgSecondary = CoolNeutral30
-val SemanticFgTertiary = CoolNeutral50
-val SemanticFgMuted = CoolNeutral70
-val SemanticFgOnPrimary = Color.White
-val SemanticFgOnInverse = Color.White
-val SemanticFgLink = Blue50
+    // Semantic
+    val background: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val icon: Color,
+    val yellow: Color,
+    val red: Color,
+    val green: Color,
+    val black: Color,
+    val white: Color,
+    val error: Color,
+)
 
-val SemanticPrimary = Blue50
-val SemanticPrimaryHover = Blue40
-val SemanticPrimaryPress = Blue30
-val SemanticPrimaryBg = Blue99
-val SemanticPrimaryBgStrong = Blue95
+val lightColorScheme = SRColors(
+    coolNeutral99 = CoolNeutral99, coolNeutral98 = CoolNeutral98, coolNeutral97 = CoolNeutral97,
+    coolNeutral96 = CoolNeutral96, coolNeutral95 = CoolNeutral95, coolNeutral90 = CoolNeutral90,
+    coolNeutral80 = CoolNeutral80, coolNeutral70 = CoolNeutral70, coolNeutral60 = CoolNeutral60,
+    coolNeutral50 = CoolNeutral50, coolNeutral40 = CoolNeutral40, coolNeutral30 = CoolNeutral30,
+    coolNeutral25 = CoolNeutral25, coolNeutral23 = CoolNeutral23, coolNeutral22 = CoolNeutral22,
+    coolNeutral20 = CoolNeutral20, coolNeutral17 = CoolNeutral17, coolNeutral15 = CoolNeutral15,
+    coolNeutral10 = CoolNeutral10, coolNeutral7 = CoolNeutral7, coolNeutral5 = CoolNeutral5,
 
-val SemanticPositive = Green60
-val SemanticPositiveBg = Green95
-val SemanticCautionary = Yellow60
-val SemanticCautionaryBg = Yellow95
-val SemanticNegative = Red60
-val SemanticNegativeBg = Red95
-val SemanticInformative = Blue50
-val SemanticInformativeBg = Blue95
+    blue99 = Blue99, blue95 = Blue95, blue90 = Blue90, blue80 = Blue80, blue70 = Blue70,
+    blue60 = Blue60, blue50 = Blue50, blue40 = Blue40, blue30 = Blue30, blue22 = Blue22,
+    blue20 = Blue20, blue15 = Blue15, blue10 = Blue10,
 
-val SemanticStrokeSubtle = Color(0x1A70737C)
-val SemanticStrokeDefault = Color(0x3870737C)
-val SemanticStrokeStrong = Color(0x6670737C)
+    background = CoolNeutral99,
+    textPrimary = CoolNeutral10,
+    textSecondary = CoolNeutral50,
+    icon = CoolNeutral40,
+    yellow = Yellow80,
+    red = Red70,
+    green = Green70,
+    black = CoolNeutral5,
+    white = Color.White,
+    error = Red60,
+)
 
-// ─── Semantic — Dark ───
-val DarkBgBase = CoolNeutral10
-val DarkBgElevated = CoolNeutral15
-val DarkBgSubtle = CoolNeutral17
-val DarkBgMuted = CoolNeutral20
-val DarkBgInverse = CoolNeutral95
+val darkColorScheme = SRColors(
+    coolNeutral99 = CoolNeutral99, coolNeutral98 = CoolNeutral98, coolNeutral97 = CoolNeutral97,
+    coolNeutral96 = CoolNeutral96, coolNeutral95 = CoolNeutral95, coolNeutral90 = CoolNeutral90,
+    coolNeutral80 = CoolNeutral80, coolNeutral70 = CoolNeutral70, coolNeutral60 = CoolNeutral60,
+    coolNeutral50 = CoolNeutral50, coolNeutral40 = CoolNeutral40, coolNeutral30 = CoolNeutral30,
+    coolNeutral25 = CoolNeutral25, coolNeutral23 = CoolNeutral23, coolNeutral22 = CoolNeutral22,
+    coolNeutral20 = CoolNeutral20, coolNeutral17 = CoolNeutral17, coolNeutral15 = CoolNeutral15,
+    coolNeutral10 = CoolNeutral10, coolNeutral7 = CoolNeutral7, coolNeutral5 = CoolNeutral5,
 
-val DarkFgPrimary = Color.White
-val DarkFgSecondary = CoolNeutral80
-val DarkFgTertiary = CoolNeutral60
-val DarkFgMuted = CoolNeutral40
+    blue99 = Blue99, blue95 = Blue95, blue90 = Blue90, blue80 = Blue80, blue70 = Blue70,
+    blue60 = Blue60, blue50 = Blue50, blue40 = Blue40, blue30 = Blue30, blue22 = Blue22,
+    blue20 = Blue20, blue15 = Blue15, blue10 = Blue10,
 
-val DarkPrimary = Blue60
-val DarkPrimaryBg = Blue22
-
-val DarkPositive = Green80
-val DarkPositiveBg = Green30
-val DarkNegative = Red80
-val DarkNegativeBg = Red30
-val DarkCautionary = Yellow80
-val DarkCautionaryBg = Yellow30
+    background = CoolNeutral10,
+    textPrimary = CoolNeutral99,
+    textSecondary = CoolNeutral70,
+    icon = CoolNeutral60,
+    yellow = Yellow90,
+    red = Red80,
+    green = Green80,
+    black = CoolNeutral5,
+    white = Color.White,
+    error = Red80,
+)
