@@ -1,11 +1,10 @@
 package com.choiminjun.designsystem.theme
 
-import androidx.compose.material3.Typography
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.choiminjun.designsystem.R
 
@@ -18,110 +17,71 @@ val PretendardFontFamily = FontFamily(
     Font(R.font.pretendard_variable, FontWeight.ExtraBold),
 )
 
-val SRTypography = Typography(
-    displayLarge = TextStyle(
+@Immutable
+data class SRTypography(
+    val headingXLSB: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 64.sp,
-        lineHeight = (64 * 1.25).sp,
-        letterSpacing = (-0.017).em,
-    ),
-    displayMedium = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 36.sp,
-        lineHeight = (36 * 1.334).sp,
-        letterSpacing = (-0.027).em,
-    ),
-    displaySmall = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
-        lineHeight = (28 * 1.358).sp,
-        letterSpacing = (-0.024).em,
     ),
-    headlineLarge = TextStyle(
+    val headingLSB: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
-        lineHeight = (24 * 1.4).sp,
-        letterSpacing = (-0.023).em,
     ),
-    headlineMedium = TextStyle(
+    val headingMSB: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 17.sp,
-        lineHeight = (17 * 1.4).sp,
-        letterSpacing = 0.em,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
     ),
-    headlineSmall = TextStyle(
+    val bodyMSB: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
-        lineHeight = (16 * 1.5).sp,
-        letterSpacing = 0.006.em,
     ),
-    titleLarge = TextStyle(
+    val bodyLM: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp,
+    ),
+    val bodyLR: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.sp,
+    ),
+    val bodyXMM: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
-        lineHeight = (18 * 1.4).sp,
-        letterSpacing = (-0.01).em,
     ),
-    titleMedium = TextStyle(
+    val bodyXMR: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 18.sp,
+    ),
+    val bodyMM: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
-        lineHeight = (16 * 1.5).sp,
-        letterSpacing = 0.006.em,
     ),
-    titleSmall = TextStyle(
+    val bodyMR: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = (14 * 1.5).sp,
-        letterSpacing = 0.006.em,
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = (16 * 1.5).sp,
-        letterSpacing = 0.006.em,
     ),
-    bodyMedium = TextStyle(
+    val bodySSB: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+    ),
+    val bodySM: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = (14 * 1.5).sp,
-        letterSpacing = 0.006.em,
     ),
-    bodySmall = TextStyle(
+    val bodySR: TextStyle = TextStyle(
         fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 13.sp,
-        lineHeight = (13 * 1.5).sp,
-        letterSpacing = 0.em,
-    ),
-    labelLarge = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = (16 * 1.5).sp,
-        letterSpacing = 0.006.em,
-    ),
-    labelMedium = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = (14 * 1.5).sp,
-        letterSpacing = 0.006.em,
-    ),
-    labelSmall = TextStyle(
-        fontFamily = PretendardFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        lineHeight = (12 * 1.5).sp,
-        letterSpacing = 0.02.em,
     ),
 )

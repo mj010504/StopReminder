@@ -1,7 +1,6 @@
 package com.choiminjun.designsystem.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
 object Shape {
@@ -13,11 +12,3 @@ object Shape {
     val xxl = RoundedCornerShape(32.dp)
     val pill = RoundedCornerShape(percent = 50)
 }
-
-internal val SRShapes = Shapes(
-    extraSmall = Shape.xs,
-    small = Shape.sm,
-    medium = Shape.md,
-    large = Shape.lg,
-    extraLarge = Shape.xl,
-)

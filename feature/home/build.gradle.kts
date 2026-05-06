@@ -5,6 +5,3 @@ plugins {
 android {
     namespace = "com.choiminjun.home"
 }
-
-dependencies {
-}

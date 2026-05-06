@@ -1,5 +1,6 @@
 plugins {
     id("stopreminder.android.library")
+    id("stopreminder.android.compose")
 }
 
 android {

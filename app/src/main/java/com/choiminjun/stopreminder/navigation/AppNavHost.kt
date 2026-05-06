@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.choiminjun.home.navigation.homeGraph
 import com.choiminjun.navigation.HomeBaseRoute
+import com.choiminjun.navigation.HomeGraph
 
 @Composable
 fun AppNavHost(
@@ -17,6 +18,17 @@ fun AppNavHost(
         startDestination = HomeBaseRoute,
         modifier = modifier,
     ) {
-        homeGraph()
+        homeGraph(
+            navigateToBusRoute = { routeId ->
+                navController.navigate(HomeGraph.BusRouteRoute(routeId))
+            },
+            navigateToBusNode = { nodeId ->
+                navController.navigate(HomeGraph.BusNodeRoute(nodeId))
+            },
+            navigateBack = { navController.popBackStack() },
+            navigateToAlarmSetting = { _ ->
+                // TODO: 알람 설정 화면으로 이동
+            },
+        )
     }
 }

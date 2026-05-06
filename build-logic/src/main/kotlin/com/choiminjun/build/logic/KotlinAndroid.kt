@@ -7,7 +7,6 @@ import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import kotlin.text.get
 
 internal fun Project.configureKotlinAndroid() {
     plugins.apply("org.jetbrains.kotlin.android")

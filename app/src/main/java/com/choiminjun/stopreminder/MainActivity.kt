@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import com.choiminjun.designsystem.theme.StopReminderTheme
+import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.stopreminder.ui.StopReminderApp
 import com.choiminjun.stopreminder.ui.rememberAppState
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val appState = rememberAppState(navController)
 
-            StopReminderTheme {
+            SRTheme {
                 StopReminderApp(appState = appState)
             }
         }

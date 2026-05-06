@@ -1,0 +1,11 @@
+<resources>
+    <string name="search_hint">버스번호 또는 정류장 검색</string>
+    <string name="search_empty_result">검색 결과가 없습니다</string>
+    <string name="search_section_bus_route">버스 번호</string>
+    <string name="search_section_bus_stop">버스 정류장</string>
+    <string name="bus_stop_node_no">%s번 정류장</string>
+    <string name="bus_route_direction">%1$s → %2$s</string>
+    <string name="back">뒤로가기</string>
+    <string name="menu">메뉴</string>
+    <string name="alarm_setting">알람 설정</string>
+</resources>
