@@ -18,21 +18,29 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.choiminjun.designsystem.R
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
+import com.choiminjun.domain.model.bus.BusNode
+import com.choiminjun.domain.model.bus.BusRoute
+import com.choiminjun.domain.model.bus.CityCode
+import com.choiminjun.home.R
 import com.choiminjun.home.home.component.SearchField
 import com.choiminjun.home.home.component.SearchResult
+import com.choiminjun.designsystem.R as DesignSystemR
 
 @Composable
 internal fun HomeRoute(
@@ -56,6 +64,8 @@ internal fun HomeRoute(
         onSearchFocused = { viewModel.onIntent(HomeIntent.FocusSearch) },
         onBusRouteClick = { routeId -> viewModel.onIntent(HomeIntent.ClickBusRoute(routeId)) },
         onBusNodeClick = { nodeId -> viewModel.onIntent(HomeIntent.ClickBusNode(nodeId)) },
+        onTabSelect = { tab -> viewModel.onIntent(HomeIntent.SelectTab(tab)) },
+        onClearQuery = { viewModel.onIntent(HomeIntent.ClearQuery) },
     )
 }
 
@@ -68,6 +78,8 @@ private fun HomeScreen(
     onSearchFocused: () -> Unit,
     onBusRouteClick: (String) -> Unit,
     onBusNodeClick: (String) -> Unit,
+    onTabSelect: (SearchTab) -> Unit,
+    onClearQuery: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val imeVisible = WindowInsets.isImeVisible
@@ -96,9 +108,9 @@ private fun HomeScreen(
         ) {
             Icon(
                 imageVector = if (state.isSearching) {
-                    ImageVector.vectorResource(R.drawable.ic_arrow_left)
+                    ImageVector.vectorResource(DesignSystemR.drawable.ic_arrow_left)
                 } else {
-                    ImageVector.vectorResource(R.drawable.ic_menu)
+                    ImageVector.vectorResource(DesignSystemR.drawable.ic_menu)
                 },
                 contentDescription = if (state.isSearching) "뒤로가기" else "메뉴",
                 tint = SRTheme.colors.icon,
@@ -108,6 +120,7 @@ private fun HomeScreen(
                 value = state.searchQuery,
                 onValueChange = onQueryChange,
                 onFocused = onSearchFocused,
+                onClearClick = onClearQuery,
             )
         }
         HorizontalDivider(
@@ -117,6 +130,16 @@ private fun HomeScreen(
         )
 
         if (state.isSearching) {
+            SearchTabRow(
+                selectedTab = state.selectedTab,
+                onTabSelect = onTabSelect,
+            )
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp,
+                color = SRTheme.colors.coolNeutral95,
+            )
+
             if (state.isLoading) {
                 Box(
                     modifier = Modifier
@@ -132,8 +155,50 @@ private fun HomeScreen(
                     query = state.searchQuery,
                     routes = state.searchedRoutes,
                     nodes = state.searchedNodes,
+                    selectedTab = state.selectedTab,
                     onBusRouteClick = onBusRouteClick,
                     onBusNodeClick = onBusNodeClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchTabRow(
+    selectedTab: SearchTab,
+    onTabSelect: (SearchTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val selectedColor = SRTheme.colors.textPrimary
+    Row(modifier = modifier.fillMaxWidth()) {
+        SearchTab.entries.forEach { tab ->
+            val isSelected = tab == selectedTab
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onTabSelect(tab) }
+                    .drawBehind {
+                        if (isSelected) {
+                            val strokeWidth = 2.dp.toPx()
+                            drawLine(
+                                color = selectedColor,
+                                start = Offset(0f, size.height),
+                                end = Offset(size.width, size.height),
+                                strokeWidth = strokeWidth,
+                            )
+                        }
+                    }
+                    .padding(vertical = Spacing.space12),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = when (tab) {
+                        SearchTab.BUS -> stringResource(R.string.search_tab_bus)
+                        SearchTab.STOP -> stringResource(R.string.search_tab_stop)
+                    },
+                    style = SRTheme.typography.bodyMM,
+                    color = if (isSelected) SRTheme.colors.textPrimary else SRTheme.colors.textSecondary,
                 )
             }
         }
@@ -151,6 +216,84 @@ private fun HomeScreenPreview() {
             onSearchFocused = {},
             onBusRouteClick = {},
             onBusNodeClick = {},
+            onTabSelect = {},
+            onClearQuery = {},
+        )
+    }
+}
+
+@Composable
+@Preview(showBackground = true, name = "검색 중 - 버스 탭")
+private fun HomeScreenSearchBusTabPreview() {
+    SRTheme {
+        HomeScreen(
+            state = HomeState(
+                searchQuery = "51",
+                isSearching = true,
+                selectedTab = SearchTab.BUS,
+                searchedRoutes = listOf(
+                    BusRoute(
+                        routeId = "1",
+                        routeNo = "51",
+                        routeType = "일반버스",
+                        startNodeName = "노포동",
+                        endNodeName = "하단",
+                        cityCode = CityCode.BUSAN,
+                    ),
+                    BusRoute(
+                        routeId = "2",
+                        routeNo = "51-1",
+                        routeType = "급행버스",
+                        startNodeName = "기장",
+                        endNodeName = "사상",
+                        cityCode = CityCode.BUSAN,
+                    ),
+                ),
+            ),
+            onBackClick = {},
+            onQueryChange = {},
+            onSearchFocused = {},
+            onBusRouteClick = {},
+            onBusNodeClick = {},
+            onTabSelect = {},
+            onClearQuery = {},
+        )
+    }
+}
+
+@Composable
+@Preview(showBackground = true, name = "검색 중 - 정류장 탭")
+private fun HomeScreenSearchStopTabPreview() {
+    SRTheme {
+        HomeScreen(
+            state = HomeState(
+                searchQuery = "부산대",
+                isSearching = true,
+                selectedTab = SearchTab.STOP,
+                searchedNodes = listOf(
+                    BusNode(
+                        nodeId = "N1",
+                        nodeName = "부산대학교",
+                        latitude = 35.23,
+                        longitude = 129.08,
+                        cityCode = CityCode.BUSAN,
+                    ),
+                    BusNode(
+                        nodeId = "N2",
+                        nodeName = "부산대앞",
+                        latitude = 35.23,
+                        longitude = 129.09,
+                        cityCode = CityCode.BUSAN,
+                    ),
+                ),
+            ),
+            onBackClick = {},
+            onQueryChange = {},
+            onSearchFocused = {},
+            onBusRouteClick = {},
+            onBusNodeClick = {},
+            onTabSelect = {},
+            onClearQuery = {},
         )
     }
 }
