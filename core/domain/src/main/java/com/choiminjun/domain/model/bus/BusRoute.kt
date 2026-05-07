@@ -6,4 +6,5 @@ data class BusRoute(
     val routeType: String,
     val startNodeName: String,
     val endNodeName: String,
+    val cityCode: CityCode,
 )

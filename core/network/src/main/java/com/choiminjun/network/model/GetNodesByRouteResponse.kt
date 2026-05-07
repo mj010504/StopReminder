@@ -2,6 +2,7 @@ package com.choiminjun.network.model
 
 import com.choiminjun.network.serializer.AnyToStringSerializer
 import com.choiminjun.network.serializer.EmptyStringOrObjectSerializer
+import com.choiminjun.network.serializer.NullableAnyToStringSerializer
 import com.choiminjun.network.serializer.SingleOrListSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -26,6 +27,8 @@ data class GetNodesByRouteItem(
     @SerialName("routeid") val routeId: String,
     @SerialName("nodeid") val nodeId: String,
     @SerialName("nodenm") val nodeName: String,
+    @Serializable(with = NullableAnyToStringSerializer::class)
+    @SerialName("nodeno") val nodeNo: String? = null,
     @Serializable(with = AnyToStringSerializer::class)
     @SerialName("nodeord") val nodeOrd: String,
     @SerialName("gpslati") val gpsLati: Double,

@@ -26,6 +26,7 @@ data class GetRouteNumbersItem(
     @SerialName("routeid") val routeId: String,
     @Serializable(with = AnyToStringSerializer::class)
     @SerialName("routeno") val routeNo: String,
+    @SerialName("routetp") val routeType: String,
     @SerialName("endnodenm") val endNodeName: String,
     @SerialName("startnodenm") val startNodeName: String,
 )
