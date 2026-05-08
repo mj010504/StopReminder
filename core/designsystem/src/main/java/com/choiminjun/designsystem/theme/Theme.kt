@@ -1,6 +1,9 @@
 package com.choiminjun.designsystem.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -27,11 +30,31 @@ fun SRTheme(
 
     val typography = SRTypography()
 
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = colors.blue50,
+            secondary = colors.coolNeutral40,
+            background = colors.background,
+            surface = colors.background,
+        )
+    } else {
+        lightColorScheme(
+            primary = colors.blue50,
+            secondary = colors.coolNeutral40,
+            background = colors.background,
+            surface = colors.background,
+        )
+    }
+
     CompositionLocalProvider(
         LocalColors provides colors,
         LocalTypography provides typography,
-        content = content,
-    )
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            content = content,
+        )
+    }
 }
 
 object SRTheme {
