@@ -66,7 +66,7 @@ class BusRouteViewModel @Inject constructor(
     private fun loadNodes(routeId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            val nodes = runCatching { busRepository.getNodesByRoute(CityCode.BUSAN.code, routeId) }
+            val nodes = runCatching { busRepository.getNodesByRoute(CityCode.BUSAN, routeId) }
                 .getOrElse { emptyList() }
             _state.update { it.copy(isLoading = false, nodes = nodes) }
         }
@@ -140,9 +140,9 @@ private fun BusRouteScreenPreview() {
     SRTheme {
         val previewState = BusRouteScreenState(
             nodes = listOf(
-                BusNode(nodeId = "BSB001", nodeName = "부산대학교앞", latitude = 35.23, longitude = 129.08),
-                BusNode(nodeId = "BSB002", nodeName = "온천장역", latitude = 35.22, longitude = 129.07),
-                BusNode(nodeId = "BSB003", nodeName = "동래역", latitude = 35.20, longitude = 129.06),
+                BusNode(nodeId = "BSB001", nodeName = "부산대학교앞", latitude = 35.23, longitude = 129.08, cityCode = CityCode.BUSAN),
+                BusNode(nodeId = "BSB002", nodeName = "온천장역", latitude = 35.22, longitude = 129.07, cityCode = CityCode.BUSAN),
+                BusNode(nodeId = "BSB003", nodeName = "동래역", latitude = 35.20, longitude = 129.06, cityCode = CityCode.BUSAN),
             ),
         )
         Column(

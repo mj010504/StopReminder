@@ -11,8 +11,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
 // items 필드가 빈 문자열("")로 오는 경우 null 반환
@@ -60,5 +60,20 @@ object AnyToStringSerializer : KSerializer<String> {
     override fun deserialize(decoder: Decoder): String {
         val input = decoder as? JsonDecoder ?: throw SerializationException("Only JSON supported")
         return input.decodeJsonElement().jsonPrimitive.content
+    }
+}
+
+// null, 숫자, 문자열 혼용 필드를 항상 String?으로 반환
+@OptIn(ExperimentalSerializationApi::class)
+object NullableAnyToStringSerializer : KSerializer<String?> {
+    override val descriptor = AnyToStringSerializer.nullable.descriptor
+    override fun serialize(encoder: Encoder, value: String?) {
+        if (value == null) encoder.encodeNull() else encoder.encodeString(value)
+    }
+    override fun deserialize(decoder: Decoder): String? {
+        val input = decoder as? JsonDecoder ?: throw SerializationException("Only JSON supported")
+        val element = input.decodeJsonElement()
+        if (element is JsonNull) return null
+        return element.jsonPrimitive.content
     }
 }

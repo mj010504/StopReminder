@@ -25,6 +25,8 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.ClickBusNode -> postSideEffect(HomeSideEffect.NavigateToBusNode(intent.nodeId))
             is HomeIntent.ClickBusRoute -> postSideEffect(HomeSideEffect.NavigateToBusRoute(intent.routeId))
             is HomeIntent.UpdateQuery -> updateQuery(intent.query)
+            HomeIntent.ClearQuery -> clearQuery()
+            is HomeIntent.SelectTab -> reduce { copy(selectedTab = intent.tab) }
         }
     }
 
@@ -38,6 +40,19 @@ class HomeViewModel @Inject constructor(
         reduce {
             copy(
                 isSearching = false,
+                searchQuery = "",
+                searchedRoutes = emptyList(),
+                searchedNodes = emptyList(),
+                isLoading = false,
+                selectedTab = SearchTab.BUS,
+            )
+        }
+    }
+
+    private fun clearQuery() {
+        searchJob?.cancel()
+        reduce {
+            copy(
                 searchQuery = "",
                 searchedRoutes = emptyList(),
                 searchedNodes = emptyList(),
@@ -67,12 +82,12 @@ class HomeViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             reduce { copy(isLoading = true, searchedRoutes = emptyList(), searchedNodes = emptyList()) }
             val routesJob = launch {
-                val result = suspendRunCatching { busRepository.getRouteNumbers(CityCode.BUSAN.code, query) }
+                val result = suspendRunCatching { busRepository.getRouteNumbers(CityCode.BUSAN, query) }
                 if (result.isFailure) Log.e("SearchError", "노선 실패: ${result.exceptionOrNull()?.message}")
                 reduce { copy(searchedRoutes = result.getOrElse { emptyList() }) }
             }
             val nodesJob = launch {
-                val result = suspendRunCatching { busRepository.getNodeNumbers(CityCode.BUSAN.code, query) }
+                val result = suspendRunCatching { busRepository.getNodeNumbers(CityCode.BUSAN, query) }
                 if (result.isFailure) Log.e("SearchError", "정류장 실패: ${result.exceptionOrNull()?.message}")
                 reduce { copy(searchedNodes = result.getOrElse { emptyList() }) }
             }

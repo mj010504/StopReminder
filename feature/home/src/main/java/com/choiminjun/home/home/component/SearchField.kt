@@ -2,6 +2,7 @@ package com.choiminjun.home.home.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Shape
+import com.choiminjun.designsystem.util.noRippleClickable
 import com.choiminjun.home.R
 import com.choiminjun.designsystem.R as DesignSystemR
 
@@ -36,6 +38,7 @@ internal fun SearchField(
     value: String,
     onValueChange: (String) -> Unit,
     onFocused: () -> Unit,
+    onClearClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
@@ -58,33 +61,50 @@ internal fun SearchField(
                     isFocused = false
                 }
             },
-        textStyle = SRTheme.typography.bodyXMM,
+        textStyle = SRTheme.typography.bodyMM,
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(
             onSearch = { focusManager.clearFocus() },
         ),
         decorationBox = { innerTextField ->
-            if (value.isEmpty() && !isFocused) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    if (value.isEmpty() && !isFocused) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(DesignSystemR.drawable.ic_search),
+                                contentDescription = null,
+                                tint = SRTheme.colors.textSecondary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Text(
+                                text = stringResource(R.string.search_hint),
+                                style = SRTheme.typography.bodyMR,
+                                color = SRTheme.colors.textSecondary,
+                            )
+                        }
+                    }
+                    innerTextField()
+                }
+                if (value.isNotEmpty()) {
                     Icon(
-                        imageVector = ImageVector.vectorResource(DesignSystemR.drawable.ic_search),
+                        imageVector = ImageVector.vectorResource(DesignSystemR.drawable.ic_delete),
                         contentDescription = null,
-                        tint = SRTheme.colors.textSecondary,
-                        modifier = Modifier.size(24.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.search_hint),
-                        style = SRTheme.typography.bodyXMR,
-                        color = SRTheme.colors.textSecondary,
+                        tint = SRTheme.colors.icon,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .noRippleClickable(onClick = onClearClick),
                     )
                 }
             }
-            innerTextField()
         },
     )
 }
@@ -92,5 +112,11 @@ internal fun SearchField(
 @Preview
 @Composable
 private fun SearchFieldPreview() {
-    SearchField(value = "", onValueChange = {}, onFocused = {})
+    SearchField(value = "", onValueChange = {}, onFocused = {}, onClearClick = {})
+}
+
+@Preview
+@Composable
+private fun SearchFieldWithValuePreview() {
+    SearchField(value = "51번", onValueChange = {}, onFocused = {}, onClearClick = {})
 }

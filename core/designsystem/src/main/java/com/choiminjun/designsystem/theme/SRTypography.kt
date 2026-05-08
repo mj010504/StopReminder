@@ -1,20 +1,28 @@
 package com.choiminjun.designsystem.theme
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.choiminjun.designsystem.R
 
-val PretendardFontFamily = FontFamily(
-    Font(R.font.pretendard_variable, FontWeight.Light),
-    Font(R.font.pretendard_variable, FontWeight.Normal),
-    Font(R.font.pretendard_variable, FontWeight.Medium),
-    Font(R.font.pretendard_variable, FontWeight.SemiBold),
-    Font(R.font.pretendard_variable, FontWeight.Bold),
-    Font(R.font.pretendard_variable, FontWeight.ExtraBold),
+private val PretendardFontFamily = FontFamily(
+    FontWeight.Light.pretendardFont(),
+    FontWeight.Normal.pretendardFont(),
+    FontWeight.Medium.pretendardFont(),
+    FontWeight.SemiBold.pretendardFont(),
+    FontWeight.Bold.pretendardFont(),
+)
+
+@OptIn(ExperimentalTextApi::class)
+private fun FontWeight.pretendardFont() = Font(
+    R.font.pretendard_variable,
+    weight = this,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
 )
 
 @Immutable
@@ -83,5 +91,15 @@ data class SRTypography(
         fontFamily = PretendardFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
+    ),
+    val bodyXSM: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+    ),
+    val bodyXSR: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
     ),
 )
