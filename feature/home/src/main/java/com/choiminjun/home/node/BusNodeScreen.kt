@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,63 +27,49 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.choiminjun.designsystem.R
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
+import com.choiminjun.designsystem.util.noRippleClickable
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
-import com.choiminjun.domain.repository.BusRepository
-import com.choiminjun.navigation.HomeGraph
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-data class BusNodeScreenState(
-    val isLoading: Boolean = false,
-    val routes: List<BusRoute> = emptyList(),
-)
-
-@HiltViewModel
-class BusNodeViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val busRepository: BusRepository,
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(BusNodeScreenState())
-    val state = _state.asStateFlow()
-
-    init {
-        val nodeId = savedStateHandle.toRoute<HomeGraph.BusNodeRoute>().nodeId
-        loadRoutes(nodeId)
-    }
-
-    private fun loadRoutes(nodeId: String) {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            val routes = runCatching { busRepository.getRoutesByNode(CityCode.BUSAN, nodeId) }
-                .getOrElse { emptyList() }
-            _state.update { it.copy(isLoading = false, routes = routes) }
-        }
-    }
-}
 
 @Composable
 internal fun BusNodeScreen(
     onBackClick: () -> Unit,
     onAlarmClick: (routeId: String) -> Unit,
+    navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
+    navigateToHome: () -> Unit,
     viewModel: BusNodeViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.collectAsState()
 
+    viewModel.collectSideEffect { effect ->
+        when (effect) {
+            BusNodeSideEffect.NavigateBack -> onBackClick()
+            is BusNodeSideEffect.NavigateToAlarm -> onAlarmClick(effect.routeId)
+            is BusNodeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.routeId, effect.routeNo)
+        }
+    }
+
+    BusNodeScreenContent(
+        state = state,
+        onBackClick = { viewModel.onIntent(BusNodeIntent.ClickBack) },
+        onAlarmClick = { routeId -> viewModel.onIntent(BusNodeIntent.ClickAlarm(routeId)) },
+        onRouteClick = { routeId, routeNo -> viewModel.onIntent(BusNodeIntent.ClickBusRoute(routeId, routeNo)) },
+        onHomeClick = navigateToHome,
+    )
+}
+
+@Composable
+private fun BusNodeScreenContent(
+    state: BusNodeState,
+    onBackClick: () -> Unit,
+    onAlarmClick: (routeId: String) -> Unit,
+    onRouteClick: (routeId: String, routeNo: String) -> Unit,
+    onHomeClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,138 +82,136 @@ internal fun BusNodeScreen(
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.space20, vertical = Spacing.space16),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.space12),
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_left),
                 contentDescription = "뒤로가기",
                 tint = SRTheme.colors.icon,
-                modifier = Modifier.clickable { onBackClick() },
+                modifier = Modifier.noRippleClickable { onBackClick() },
+            )
+            Text(
+                text = state.nodeName,
+                style = SRTheme.typography.bodyXMM,
+                color = SRTheme.colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            // TODO: 즐겨찾기 기능 구현
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_star),
+                contentDescription = "즐겨찾기",
+                tint = SRTheme.colors.icon,
+                modifier = Modifier.noRippleClickable { },
+            )
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_home),
+                contentDescription = "홈",
+                tint = SRTheme.colors.icon,
+                modifier = Modifier.noRippleClickable { onHomeClick() },
             )
         }
-        HorizontalDivider(thickness = 1.dp, color = SRTheme.colors.coolNeutral95)
 
         if (state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = SRTheme.colors.blue50)
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(state.routes, key = { it.routeId }) { route ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.space20, vertical = Spacing.space12),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                item {
+                    state.nodeNo?.let { nodeNo ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = Spacing.space16),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
                             Text(
-                                text = route.routeNo,
+                                text = nodeNo,
                                 style = SRTheme.typography.bodyMM,
-                                color = SRTheme.colors.textPrimary,
-                            )
-                            Text(
-                                text = "${route.startNodeName} → ${route.endNodeName}",
-                                style = SRTheme.typography.bodySR,
                                 color = SRTheme.colors.textSecondary,
                             )
                         }
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_bell),
-                            contentDescription = "알람 설정",
-                            tint = SRTheme.colors.icon,
-                            modifier = Modifier.clickable { onAlarmClick(route.routeId) },
-                        )
+                        HorizontalDivider(thickness = Spacing.space6, color = SRTheme.colors.coolNeutral95)
                     }
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = SRTheme.colors.coolNeutral95,
-                        modifier = Modifier.padding(horizontal = Spacing.space20),
+                }
+
+                items(state.routes, key = { it.routeId }) { route ->
+                    BusNodeRouteItem(
+                        route = route,
+                        onAlarmClick = { onAlarmClick(route.routeId) },
+                        onRouteClick = { onRouteClick(route.routeId, route.routeNo) },
                     )
+                }
+
+                item {
+                    Spacer(Modifier.height(Spacing.space64))
                 }
             }
         }
     }
 }
 
+@Composable
+private fun BusNodeRouteItem(
+    route: BusRoute,
+    onAlarmClick: () -> Unit,
+    onRouteClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onRouteClick() }
+            .padding(horizontal = Spacing.space20, vertical = Spacing.space12),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = route.routeNo,
+                style = SRTheme.typography.bodyMM,
+                color = SRTheme.colors.blue50,
+            )
+            Text(
+                text = "${route.startNodeName} → ${route.endNodeName}",
+                style = SRTheme.typography.bodySR,
+                color = SRTheme.colors.textSecondary,
+            )
+        }
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.ic_bell),
+            contentDescription = "알림",
+            tint = SRTheme.colors.icon,
+            modifier = Modifier.clickable { onAlarmClick() },
+        )
+    }
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = SRTheme.colors.coolNeutral95,
+        modifier = Modifier.padding(horizontal = Spacing.space20),
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun BusNodeScreenPreview() {
     SRTheme {
-        val previewState = BusNodeScreenState(
-            routes = listOf(
-                BusRoute(
-                    routeId = "R001",
-                    routeNo = "51",
-                    routeType = "일반",
-                    startNodeName = "노포동",
-                    endNodeName = "하단",
-                    cityCode = CityCode.BUSAN,
-                ),
-                BusRoute(
-                    routeId = "R002",
-                    routeNo = "179",
-                    routeType = "일반",
-                    startNodeName = "기장",
-                    endNodeName = "사상",
-                    cityCode = CityCode.BUSAN,
-                ),
-                BusRoute(
-                    routeId = "R003",
-                    routeNo = "1001",
-                    routeType = "급행",
-                    startNodeName = "해운대",
-                    endNodeName = "서면",
-                    cityCode = CityCode.BUSAN,
+        BusNodeScreenContent(
+            state = BusNodeState(
+                nodeName = "부산대학교앞",
+                nodeNo = "12345",
+                routes = listOf(
+                    BusRoute("R001", "51", "일반", "노포동", "하단", CityCode.BUSAN),
+                    BusRoute("R002", "179", "일반", "기장", "사상", CityCode.BUSAN),
+                    BusRoute("R003", "1001", "급행", "해운대", "서면", CityCode.BUSAN),
                 ),
             ),
+            onBackClick = {},
+            onAlarmClick = {},
+            onRouteClick = { _, _ -> },
+            onHomeClick = {},
         )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(SRTheme.colors.background)
-                .statusBarsPadding()
-                .navigationBarsPadding(),
-        ) {
-            HorizontalDivider(thickness = 1.dp, color = SRTheme.colors.coolNeutral95)
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(previewState.routes, key = { it.routeId }) { route ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.space20, vertical = Spacing.space12),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = route.routeNo,
-                                style = SRTheme.typography.bodyMM,
-                                color = SRTheme.colors.textPrimary,
-                            )
-                            Text(
-                                text = "${route.startNodeName} → ${route.endNodeName}",
-                                style = SRTheme.typography.bodySR,
-                                color = SRTheme.colors.textSecondary,
-                            )
-                        }
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_bell),
-                            contentDescription = "알람 설정",
-                            tint = SRTheme.colors.icon,
-                            modifier = Modifier.clickable { },
-                        )
-                    }
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = SRTheme.colors.coolNeutral95,
-                        modifier = Modifier.padding(horizontal = Spacing.space20),
-                    )
-                }
-            }
-        }
     }
 }
