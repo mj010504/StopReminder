@@ -19,13 +19,18 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         homeGraph(
-            navigateToBusRoute = { routeId ->
-                navController.navigate(HomeGraph.BusRouteRoute(routeId))
+            navigateToBusRoute = { routeId, routeNo ->
+                navController.navigate(HomeGraph.BusRouteRoute(routeId, routeNo))
             },
-            navigateToBusNode = { nodeId ->
-                navController.navigate(HomeGraph.BusNodeRoute(nodeId))
+            navigateToBusNode = { nodeId, nodeName, nodeNo ->
+                navController.navigate(HomeGraph.BusNodeRoute(nodeId, nodeName, nodeNo))
             },
             navigateBack = { navController.popBackStack() },
+            navigateToHome = {
+                navController.navigate(HomeGraph.HomeRoute) {
+                    popUpTo(HomeBaseRoute) { inclusive = false }
+                }
+            },
             navigateToAlarmSetting = { _ ->
                 // TODO: 알람 설정 화면으로 이동
             },

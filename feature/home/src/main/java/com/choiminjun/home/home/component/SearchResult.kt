@@ -45,8 +45,8 @@ internal fun SearchResult(
     routes: List<BusRoute>,
     nodes: List<BusNode>,
     selectedTab: SearchTab,
-    onBusRouteClick: (String) -> Unit,
-    onBusNodeClick: (String) -> Unit,
+    onBusRouteClick: (routeId: String, routeNo: String) -> Unit,
+    onBusNodeClick: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val visibleRoutes = if (selectedTab == SearchTab.BUS) routes else emptyList()
@@ -91,7 +91,7 @@ internal fun SearchResult(
                         BusRouteResultItem(
                             route = route,
                             query = query,
-                            onBusRouteClick = { onBusRouteClick(route.routeId) },
+                            onBusRouteClick = { onBusRouteClick(route.routeId, route.routeNo) },
                         )
                     }
                 }
@@ -104,7 +104,7 @@ internal fun SearchResult(
                         BusNodeResultItem(
                             node = node,
                             query = query,
-                            onBusNodeClick = { onBusNodeClick(node.nodeId) },
+                            onBusNodeClick = { onBusNodeClick(node.nodeId, node.nodeName, node.nodeNo) },
                         )
                     }
                 }
@@ -291,8 +291,8 @@ private fun SearchResultBusTabPreview() {
             routes = previewRoutes,
             nodes = emptyList(),
             selectedTab = SearchTab.BUS,
-            onBusRouteClick = {},
-            onBusNodeClick = {},
+            onBusRouteClick = { _, _ -> },
+            onBusNodeClick = { _, _, _ -> },
         )
     }
 }
@@ -324,8 +324,8 @@ private fun SearchResultStopTabPreview() {
             routes = emptyList(),
             nodes = previewNodes,
             selectedTab = SearchTab.STOP,
-            onBusRouteClick = {},
-            onBusNodeClick = {},
+            onBusRouteClick = { _, _ -> },
+            onBusNodeClick = { _, _, _ -> },
         )
     }
 }
@@ -339,8 +339,8 @@ private fun SearchResultEmptyPreview() {
             routes = emptyList(),
             nodes = emptyList(),
             selectedTab = SearchTab.BUS,
-            onBusRouteClick = {},
-            onBusNodeClick = {},
+            onBusRouteClick = { _, _ -> },
+            onBusNodeClick = { _, _, _ -> },
         )
     }
 }
