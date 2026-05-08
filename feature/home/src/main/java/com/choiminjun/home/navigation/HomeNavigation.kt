@@ -6,8 +6,8 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.choiminjun.home.home.HomeRoute
-import com.choiminjun.home.node.BusNodeScreen
-import com.choiminjun.home.route.BusRouteScreen
+import com.choiminjun.home.node.BusNodeRoute
+import com.choiminjun.home.route.BusRouteRoute
 import com.choiminjun.navigation.HomeBaseRoute
 import com.choiminjun.navigation.HomeGraph
 
@@ -16,9 +16,10 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.homeGraph(
-    navigateToBusRoute: (routeId: String) -> Unit,
-    navigateToBusNode: (nodeId: String) -> Unit,
+    navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
+    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
     navigateBack: () -> Unit,
+    navigateToHome: () -> Unit,
     navigateToAlarmSetting: (routeId: String) -> Unit,
 ) {
     navigation<HomeBaseRoute>(startDestination = HomeGraph.HomeRoute) {
@@ -29,12 +30,18 @@ fun NavGraphBuilder.homeGraph(
             )
         }
         composable<HomeGraph.BusRouteRoute> {
-            BusRouteScreen(onBackClick = navigateBack)
+            BusRouteRoute(
+                onBackClick = navigateBack,
+                navigateToBusNode = navigateToBusNode,
+                navigateToHome = navigateToHome,
+            )
         }
         composable<HomeGraph.BusNodeRoute> {
-            BusNodeScreen(
+            BusNodeRoute(
                 onBackClick = navigateBack,
                 onAlarmClick = navigateToAlarmSetting,
+                navigateToBusRoute = navigateToBusRoute,
+                navigateToHome = navigateToHome,
             )
         }
     }

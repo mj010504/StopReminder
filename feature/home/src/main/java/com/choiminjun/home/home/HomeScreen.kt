@@ -45,15 +45,15 @@ import com.choiminjun.designsystem.R as DesignSystemR
 @Composable
 internal fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
-    navigateToBusRoute: (String) -> Unit,
-    navigateToBusNode: (String) -> Unit,
+    navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
+    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
 ) {
     val state by viewModel.collectAsState()
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
-            is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.routeId)
-            is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(effect.nodeId)
+            is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.routeId, effect.routeNo)
+            is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(effect.nodeId, effect.nodeName, effect.nodeNo)
         }
     }
 
@@ -62,8 +62,8 @@ internal fun HomeRoute(
         onBackClick = { viewModel.onIntent(HomeIntent.ClickBack) },
         onQueryChange = { query -> viewModel.onIntent(HomeIntent.UpdateQuery(query)) },
         onSearchFocused = { viewModel.onIntent(HomeIntent.FocusSearch) },
-        onBusRouteClick = { routeId -> viewModel.onIntent(HomeIntent.ClickBusRoute(routeId)) },
-        onBusNodeClick = { nodeId -> viewModel.onIntent(HomeIntent.ClickBusNode(nodeId)) },
+        onBusRouteClick = { routeId, routeNo -> viewModel.onIntent(HomeIntent.ClickBusRoute(routeId, routeNo)) },
+        onBusNodeClick = { nodeId, nodeName, nodeNo -> viewModel.onIntent(HomeIntent.ClickBusNode(nodeId, nodeName, nodeNo)) },
         onTabSelect = { tab -> viewModel.onIntent(HomeIntent.SelectTab(tab)) },
         onClearQuery = { viewModel.onIntent(HomeIntent.ClearQuery) },
     )
@@ -76,8 +76,8 @@ private fun HomeScreen(
     onBackClick: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSearchFocused: () -> Unit,
-    onBusRouteClick: (String) -> Unit,
-    onBusNodeClick: (String) -> Unit,
+    onBusRouteClick: (routeId: String, routeNo: String) -> Unit,
+    onBusNodeClick: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
     onTabSelect: (SearchTab) -> Unit,
     onClearQuery: () -> Unit,
 ) {
@@ -214,8 +214,8 @@ private fun HomeScreenPreview() {
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
-            onBusRouteClick = {},
-            onBusNodeClick = {},
+            onBusRouteClick = { _, _ -> },
+            onBusNodeClick = { _, _, _ -> },
             onTabSelect = {},
             onClearQuery = {},
         )
@@ -253,8 +253,8 @@ private fun HomeScreenSearchBusTabPreview() {
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
-            onBusRouteClick = {},
-            onBusNodeClick = {},
+            onBusRouteClick = { _, _ -> },
+            onBusNodeClick = { _, _, _ -> },
             onTabSelect = {},
             onClearQuery = {},
         )
@@ -290,8 +290,8 @@ private fun HomeScreenSearchStopTabPreview() {
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
-            onBusRouteClick = {},
-            onBusNodeClick = {},
+            onBusRouteClick = { _, _ -> },
+            onBusNodeClick = { _, _, _ -> },
             onTabSelect = {},
             onClearQuery = {},
         )

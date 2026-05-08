@@ -20,14 +20,14 @@ data class HomeState(
 sealed interface HomeIntent : UiIntent {
     data class UpdateQuery(val query: String) : HomeIntent
     data object FocusSearch : HomeIntent
-    data class ClickBusRoute(val routeId: String) : HomeIntent
-    data class ClickBusNode(val nodeId: String) : HomeIntent
+    data class ClickBusRoute(val routeId: String, val routeNo: String) : HomeIntent
+    data class ClickBusNode(val nodeId: String, val nodeName: String, val nodeNo: String?) : HomeIntent
     data object ClickBack : HomeIntent
     data object ClearQuery : HomeIntent
     data class SelectTab(val tab: SearchTab) : HomeIntent
 }
 
 sealed interface HomeSideEffect : UiSideEffect {
-    data class NavigateToBusRoute(val routeId: String) : HomeSideEffect
-    data class NavigateToBusNode(val nodeId: String) : HomeSideEffect
+    data class NavigateToBusRoute(val routeId: String, val routeNo: String) : HomeSideEffect
+    data class NavigateToBusNode(val nodeId: String, val nodeName: String, val nodeNo: String?) : HomeSideEffect
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,7 +37,7 @@ import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 
 @Composable
-internal fun BusNodeScreen(
+internal fun BusNodeRoute(
     onBackClick: () -> Unit,
     onAlarmClick: (routeId: String) -> Unit,
     navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
@@ -53,7 +54,7 @@ internal fun BusNodeScreen(
         }
     }
 
-    BusNodeScreenContent(
+    BusNodeScreen(
         state = state,
         onBackClick = { viewModel.onIntent(BusNodeIntent.ClickBack) },
         onAlarmClick = { routeId -> viewModel.onIntent(BusNodeIntent.ClickAlarm(routeId)) },
@@ -63,13 +64,15 @@ internal fun BusNodeScreen(
 }
 
 @Composable
-private fun BusNodeScreenContent(
+private fun BusNodeScreen(
     state: BusNodeState,
     onBackClick: () -> Unit,
     onAlarmClick: (routeId: String) -> Unit,
     onRouteClick: (routeId: String, routeNo: String) -> Unit,
     onHomeClick: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -119,7 +122,7 @@ private fun BusNodeScreenContent(
                 CircularProgressIndicator(color = SRTheme.colors.blue50)
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
                 item {
                     state.nodeNo?.let { nodeNo ->
                         Column(
@@ -198,7 +201,7 @@ private fun BusNodeRouteItem(
 @Composable
 private fun BusNodeScreenPreview() {
     SRTheme {
-        BusNodeScreenContent(
+        BusNodeScreen(
             state = BusNodeState(
                 nodeName = "부산대학교앞",
                 nodeNo = "12345",

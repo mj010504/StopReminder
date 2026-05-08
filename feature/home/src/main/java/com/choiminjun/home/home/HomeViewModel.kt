@@ -22,8 +22,8 @@ class HomeViewModel @Inject constructor(
         when (intent) {
             HomeIntent.ClickBack -> clickBack()
             HomeIntent.FocusSearch -> focusSearch()
-            is HomeIntent.ClickBusNode -> postSideEffect(HomeSideEffect.NavigateToBusNode(intent.nodeId))
-            is HomeIntent.ClickBusRoute -> postSideEffect(HomeSideEffect.NavigateToBusRoute(intent.routeId))
+            is HomeIntent.ClickBusNode -> postSideEffect(HomeSideEffect.NavigateToBusNode(intent.nodeId, intent.nodeName, intent.nodeNo))
+            is HomeIntent.ClickBusRoute -> postSideEffect(HomeSideEffect.NavigateToBusRoute(intent.routeId, intent.routeNo))
             is HomeIntent.UpdateQuery -> updateQuery(intent.query)
             HomeIntent.ClearQuery -> clearQuery()
             is HomeIntent.SelectTab -> reduce { copy(selectedTab = intent.tab) }

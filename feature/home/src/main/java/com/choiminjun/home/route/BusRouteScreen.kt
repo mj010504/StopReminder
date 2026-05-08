@@ -48,7 +48,7 @@ private val StopIconSize: Dp = 24.dp
 private val StopIconAreaWidth: Dp = Spacing.space20 + StopIconSize + Spacing.space12
 
 @Composable
-internal fun BusRouteScreen(
+internal fun BusRouteRoute(
     onBackClick: () -> Unit,
     navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
     navigateToHome: () -> Unit,
@@ -63,7 +63,7 @@ internal fun BusRouteScreen(
         }
     }
 
-    BusRouteScreenContent(
+    BusRouteScreen(
         state = state,
         onBackClick = { viewModel.onIntent(BusRouteIntent.ClickBack) },
         onNodeClick = { nodeId, nodeName, nodeNo -> viewModel.onIntent(BusRouteIntent.ClickBusNode(nodeId, nodeName, nodeNo)) },
@@ -72,12 +72,14 @@ internal fun BusRouteScreen(
 }
 
 @Composable
-private fun BusRouteScreenContent(
+private fun BusRouteScreen(
     state: BusRouteState,
     onBackClick: () -> Unit,
     onNodeClick: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
     onHomeClick: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -127,10 +129,9 @@ private fun BusRouteScreenContent(
                 CircularProgressIndicator(color = SRTheme.colors.blue50)
             }
         } else {
-            val listState = rememberLazyListState()
             LazyColumn(
-                state = listState,
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
             ) {
                 item {
                     val firstNode = state.nodes.firstOrNull()
@@ -284,7 +285,7 @@ private fun BusRouteScreenPreview() {
         BusNode("BSB005", "하단", latitude = 35.10, longitude = 128.97, cityCode = CityCode.BUSAN),
     )
     SRTheme {
-        BusRouteScreenContent(
+        BusRouteScreen(
             state = BusRouteState(routeNo = "51", nodes = nodes),
             onBackClick = {},
             onNodeClick = { _, _, _ -> },
