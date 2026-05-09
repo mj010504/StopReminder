@@ -4,12 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.choiminjun.data"
+    namespace = "com.choiminjun.database"
 }
 
 dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.common)
-    implementation(projects.core.network)
-    implementation(projects.core.database)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 }

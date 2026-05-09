@@ -4,8 +4,11 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.choiminjun.base.BaseViewModel
 import com.choiminjun.common.util.suspendRunCatching
+import com.choiminjun.domain.model.bus.BusNode
+import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 import com.choiminjun.domain.repository.BusRepository
+import com.choiminjun.domain.repository.RecentSearchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -14,28 +17,56 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val busRepository: BusRepository,
+    private val recentSearchRepository: RecentSearchRepository,
 ) : BaseViewModel<HomeState, HomeIntent, HomeSideEffect>(initialState = HomeState()) {
 
     private var searchJob: Job? = null
 
+    init {
+        loadRecentSearches()
+    }
+
     override suspend fun handleIntent(intent: HomeIntent) {
         when (intent) {
-            HomeIntent.ClickBack -> clickBack()
+            HomeIntent.ClickBack -> onBackClick()
             HomeIntent.FocusSearch -> focusSearch()
-            is HomeIntent.ClickBusNode -> postSideEffect(HomeSideEffect.NavigateToBusNode(intent.nodeId, intent.nodeName, intent.nodeNo))
-            is HomeIntent.ClickBusRoute -> postSideEffect(HomeSideEffect.NavigateToBusRoute(intent.routeId, intent.routeNo))
+            is HomeIntent.ClickBusNode -> clickBusNode(intent.busNode)
+            is HomeIntent.ClickBusRoute -> clickBusRoute(intent.busRoute)
             is HomeIntent.UpdateQuery -> updateQuery(intent.query)
             HomeIntent.ClearQuery -> clearQuery()
-            is HomeIntent.SelectTab -> reduce { copy(selectedTab = intent.tab) }
+            is HomeIntent.SelectTab -> selectTab(intent)
+            is HomeIntent.DeleteRecentRouteSearch -> deleteRecentRouteSearch(intent.routeId)
+            is HomeIntent.DeleteRecentNodeSearch -> deleteRecentNodeSearch(intent.nodeId)
         }
+    }
+
+    private fun clickBusRoute(busRoute: BusRoute) {
+        saveRecentRoute(busRoute)
+        postSideEffect(HomeSideEffect.NavigateToBusRoute(busRoute.routeId, busRoute.routeNo))
+    }
+
+    private fun clickBusNode(busNode: BusNode) {
+        saveRecentNode(busNode)
+        postSideEffect(HomeSideEffect.NavigateToBusNode(busNode.nodeId, busNode.nodeName, busNode.nodeNo))
+    }
+
+    private fun selectTab(intent: HomeIntent.SelectTab) {
+        reduce { copy(selectedTab = intent.tab) }
+    }
+
+    private fun deleteRecentRouteSearch(routeId: String) {
+        viewModelScope.launch { recentSearchRepository.deleteRoute(routeId) }
+    }
+
+    private fun deleteRecentNodeSearch(nodeId: String) {
+        viewModelScope.launch { recentSearchRepository.deleteNode(nodeId) }
     }
 
     private fun focusSearch() {
         reduce { copy(isSearching = true) }
-        loadRecentSearches()
     }
 
-    private fun clickBack() {
+    private fun onBackClick() {
         searchJob?.cancel()
         reduce {
             copy(
@@ -81,11 +112,13 @@ class HomeViewModel @Inject constructor(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             reduce { copy(isLoading = true, searchedRoutes = emptyList(), searchedNodes = emptyList()) }
+
             val routesJob = launch {
                 val result = suspendRunCatching { busRepository.getRouteNumbers(CityCode.BUSAN, query) }
                 if (result.isFailure) Log.e("SearchError", "노선 실패: ${result.exceptionOrNull()?.message}")
                 reduce { copy(searchedRoutes = result.getOrElse { emptyList() }) }
             }
+
             val nodesJob = launch {
                 val result = suspendRunCatching { busRepository.getNodeNumbers(CityCode.BUSAN, query) }
                 if (result.isFailure) Log.e("SearchError", "정류장 실패: ${result.exceptionOrNull()?.message}")
@@ -98,7 +131,29 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun saveRecentRoute(busRoute: BusRoute) = viewModelScope.launch {
+        suspendRunCatching {
+            recentSearchRepository.saveRoute(busRoute)
+        }
+    }
+
+    private fun saveRecentNode(busNode: BusNode) = viewModelScope.launch {
+        suspendRunCatching {
+            recentSearchRepository.saveNode(busNode)
+        }
+    }
+
     private fun loadRecentSearches() {
-        // TODO: 최근 검색어 불러오기
+        viewModelScope.launch {
+            recentSearchRepository.getRecentRouteSearches().collect { searches ->
+                reduce { copy(recentRouteSearches = searches) }
+            }
+        }
+
+        viewModelScope.launch {
+            recentSearchRepository.getRecentNodeSearches().collect { searches ->
+                reduce { copy(recentNodeSearches = searches) }
+            }
+        }
     }
 }

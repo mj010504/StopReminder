@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,11 +31,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.choiminjun.designsystem.theme.SRTheme
-import com.choiminjun.designsystem.theme.Shape
 import com.choiminjun.designsystem.theme.Spacing
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
+import com.choiminjun.domain.model.search.RecentNodeSearch
+import com.choiminjun.domain.model.search.RecentRouteSearch
+import com.choiminjun.domain.model.search.toBusNode
+import com.choiminjun.domain.model.search.toBusRoute
 import com.choiminjun.home.R
 import com.choiminjun.home.home.SearchTab
 import com.choiminjun.designsystem.R as DR
@@ -45,8 +49,12 @@ internal fun SearchResult(
     routes: List<BusRoute>,
     nodes: List<BusNode>,
     selectedTab: SearchTab,
-    onBusRouteClick: (routeId: String, routeNo: String) -> Unit,
-    onBusNodeClick: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    recentRouteSearches: List<RecentRouteSearch>,
+    recentNodeSearches: List<RecentNodeSearch>,
+    onBusRouteClick: (BusRoute) -> Unit,
+    onBusNodeClick: (BusNode) -> Unit,
+    onRecentRouteSearchDelete: (String) -> Unit,
+    onRecentNodeSearchDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val visibleRoutes = if (selectedTab == SearchTab.BUS) routes else emptyList()
@@ -59,7 +67,51 @@ internal fun SearchResult(
     ) {
         when {
             query.isBlank() -> {
-                // TODO: 최근 검색어 불러오기
+                if ((selectedTab == SearchTab.BUS && recentRouteSearches.isEmpty()) ||
+                    (selectedTab == SearchTab.STOP && recentNodeSearches.isEmpty())
+                ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxSize()
+                                .padding(Spacing.space20),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                modifier = Modifier.imePadding(),
+                                text = stringResource(R.string.search_recent_empty),
+                                style = SRTheme.typography.bodyMR,
+                                color = SRTheme.colors.textSecondary,
+                            )
+                        }
+                    }
+                } else {
+                    when (selectedTab) {
+                        SearchTab.BUS -> {
+                            items(recentRouteSearches, key = { "route_${it.routeId}" }) { item ->
+                                RecentRouteSearchItem(
+                                    item = item,
+                                    onItemClick = {
+                                        onBusRouteClick(item.toBusRoute())
+                                    },
+                                    onDeleteClick = { onRecentRouteSearchDelete(item.routeId) },
+                                )
+                            }
+                        }
+
+                        SearchTab.STOP -> {
+                            items(recentNodeSearches, key = { "node_${it.nodeId}" }) { item ->
+                                RecentNodeSearchItem(
+                                    item = item,
+                                    onItemClick = {
+                                        onBusNodeClick(item.toBusNode())
+                                    },
+                                    onDeleteClick = { onRecentNodeSearchDelete(item.nodeId) },
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             visibleRoutes.isEmpty() && visibleNodes.isEmpty() -> {
@@ -67,10 +119,11 @@ internal fun SearchResult(
                     Box(
                         modifier = Modifier
                             .fillParentMaxSize()
-                            .padding(Spacing.space20),
+                            .padding(Spacing.space28),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
+                            modifier = Modifier.imePadding(),
                             text = stringResource(R.string.search_empty_result),
                             style = SRTheme.typography.bodyMR,
                             color = SRTheme.colors.textSecondary,
@@ -91,7 +144,7 @@ internal fun SearchResult(
                         BusRouteResultItem(
                             route = route,
                             query = query,
-                            onBusRouteClick = { onBusRouteClick(route.routeId, route.routeNo) },
+                            onBusRouteClick = { onBusRouteClick(route) },
                         )
                     }
                 }
@@ -104,7 +157,7 @@ internal fun SearchResult(
                         BusNodeResultItem(
                             node = node,
                             query = query,
-                            onBusNodeClick = { onBusNodeClick(node.nodeId, node.nodeName, node.nodeNo) },
+                            onBusNodeClick = { onBusNodeClick(node) },
                         )
                     }
                 }
@@ -211,21 +264,6 @@ private fun BusNodeResultItem(
 }
 
 @Composable
-private fun BusTypeLabel(type: String) {
-    Text(
-        text = type,
-        style = SRTheme.typography.bodyXSM,
-        color = SRTheme.colors.white,
-        modifier = Modifier
-            .background(
-                color = SRTheme.colors.blue50,
-                shape = Shape.xs,
-            )
-            .padding(horizontal = Spacing.space6, vertical = Spacing.space2),
-    )
-}
-
-@Composable
 private fun HighlightedText(
     text: String,
     query: String,
@@ -291,8 +329,12 @@ private fun SearchResultBusTabPreview() {
             routes = previewRoutes,
             nodes = emptyList(),
             selectedTab = SearchTab.BUS,
-            onBusRouteClick = { _, _ -> },
-            onBusNodeClick = { _, _, _ -> },
+            recentRouteSearches = emptyList(),
+            recentNodeSearches = emptyList(),
+            onBusRouteClick = { },
+            onBusNodeClick = { },
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
         )
     }
 }
@@ -324,8 +366,12 @@ private fun SearchResultStopTabPreview() {
             routes = emptyList(),
             nodes = previewNodes,
             selectedTab = SearchTab.STOP,
-            onBusRouteClick = { _, _ -> },
-            onBusNodeClick = { _, _, _ -> },
+            recentRouteSearches = emptyList(),
+            recentNodeSearches = emptyList(),
+            onBusRouteClick = { },
+            onBusNodeClick = { },
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
         )
     }
 }
@@ -335,12 +381,16 @@ private fun SearchResultStopTabPreview() {
 private fun SearchResultEmptyPreview() {
     SRTheme {
         SearchResult(
-            query = "존재하지않는노선",
+            query = "존재하지 않는 노선",
             routes = emptyList(),
             nodes = emptyList(),
             selectedTab = SearchTab.BUS,
-            onBusRouteClick = { _, _ -> },
-            onBusNodeClick = { _, _, _ -> },
+            recentRouteSearches = emptyList(),
+            recentNodeSearches = emptyList(),
+            onBusRouteClick = { },
+            onBusNodeClick = { },
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
         )
     }
 }

@@ -4,7 +4,7 @@ data class BusNode(
     val nodeId: String,
     val nodeName: String,
     val nodeNo: String? = null,
-    val latitude: Double,
-    val longitude: Double,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val cityCode: CityCode,
 )

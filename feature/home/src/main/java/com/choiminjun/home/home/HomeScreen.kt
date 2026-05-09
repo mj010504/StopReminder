@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -62,10 +63,12 @@ internal fun HomeRoute(
         onBackClick = { viewModel.onIntent(HomeIntent.ClickBack) },
         onQueryChange = { query -> viewModel.onIntent(HomeIntent.UpdateQuery(query)) },
         onSearchFocused = { viewModel.onIntent(HomeIntent.FocusSearch) },
-        onBusRouteClick = { routeId, routeNo -> viewModel.onIntent(HomeIntent.ClickBusRoute(routeId, routeNo)) },
-        onBusNodeClick = { nodeId, nodeName, nodeNo -> viewModel.onIntent(HomeIntent.ClickBusNode(nodeId, nodeName, nodeNo)) },
+        onBusRouteClick = { busRoute -> viewModel.onIntent(HomeIntent.ClickBusRoute(busRoute)) },
+        onBusNodeClick = { busNode -> viewModel.onIntent(HomeIntent.ClickBusNode(busNode)) },
         onTabSelect = { tab -> viewModel.onIntent(HomeIntent.SelectTab(tab)) },
-        onClearQuery = { viewModel.onIntent(HomeIntent.ClearQuery) },
+        onQueryClear = { viewModel.onIntent(HomeIntent.ClearQuery) },
+        onRecentRouteSearchDelete = { routeId -> viewModel.onIntent(HomeIntent.DeleteRecentRouteSearch(routeId)) },
+        onRecentNodeSearchDelete = { nodeId -> viewModel.onIntent(HomeIntent.DeleteRecentNodeSearch(nodeId)) },
     )
 }
 
@@ -76,10 +79,13 @@ private fun HomeScreen(
     onBackClick: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSearchFocused: () -> Unit,
-    onBusRouteClick: (routeId: String, routeNo: String) -> Unit,
-    onBusNodeClick: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    onBusRouteClick: (BusRoute) -> Unit,
+    onBusNodeClick: (BusNode) -> Unit,
     onTabSelect: (SearchTab) -> Unit,
-    onClearQuery: () -> Unit,
+    onQueryClear: () -> Unit,
+    onRecentRouteSearchDelete: (String) -> Unit,
+    onRecentNodeSearchDelete: (String) -> Unit,
+
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val imeVisible = WindowInsets.isImeVisible
@@ -120,7 +126,7 @@ private fun HomeScreen(
                 value = state.searchQuery,
                 onValueChange = onQueryChange,
                 onFocused = onSearchFocused,
-                onClearClick = onClearQuery,
+                onClearClick = onQueryClear,
             )
         }
         HorizontalDivider(
@@ -147,7 +153,7 @@ private fun HomeScreen(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = SRTheme.colors.blue50)
+                    CircularProgressIndicator(modifier = Modifier.imePadding(), color = SRTheme.colors.blue50)
                 }
             } else {
                 SearchResult(
@@ -156,8 +162,12 @@ private fun HomeScreen(
                     routes = state.searchedRoutes,
                     nodes = state.searchedNodes,
                     selectedTab = state.selectedTab,
+                    recentRouteSearches = state.recentRouteSearches,
+                    recentNodeSearches = state.recentNodeSearches,
                     onBusRouteClick = onBusRouteClick,
                     onBusNodeClick = onBusNodeClick,
+                    onRecentRouteSearchDelete = onRecentRouteSearchDelete,
+                    onRecentNodeSearchDelete = onRecentNodeSearchDelete,
                 )
             }
         }
@@ -214,10 +224,33 @@ private fun HomeScreenPreview() {
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
-            onBusRouteClick = { _, _ -> },
-            onBusNodeClick = { _, _, _ -> },
+            onBusRouteClick = {},
+            onBusNodeClick = {},
             onTabSelect = {},
-            onClearQuery = {},
+            onQueryClear = {},
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
+        )
+    }
+}
+
+@Composable
+@Preview(showBackground = true, name = "검색 전")
+private fun HomeScreenPrevSearchPreview() {
+    SRTheme {
+        HomeScreen(
+            state = HomeState(
+                isSearching = true,
+            ),
+            onBackClick = {},
+            onQueryChange = {},
+            onSearchFocused = {},
+            onBusRouteClick = {},
+            onBusNodeClick = {},
+            onTabSelect = {},
+            onQueryClear = {},
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
         )
     }
 }
@@ -253,10 +286,12 @@ private fun HomeScreenSearchBusTabPreview() {
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
-            onBusRouteClick = { _, _ -> },
-            onBusNodeClick = { _, _, _ -> },
+            onBusRouteClick = {},
+            onBusNodeClick = {},
             onTabSelect = {},
-            onClearQuery = {},
+            onQueryClear = {},
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
         )
     }
 }
@@ -290,10 +325,12 @@ private fun HomeScreenSearchStopTabPreview() {
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
-            onBusRouteClick = { _, _ -> },
-            onBusNodeClick = { _, _, _ -> },
+            onBusRouteClick = {},
+            onBusNodeClick = {},
             onTabSelect = {},
-            onClearQuery = {},
+            onQueryClear = {},
+            onRecentRouteSearchDelete = {},
+            onRecentNodeSearchDelete = {},
         )
     }
 }
