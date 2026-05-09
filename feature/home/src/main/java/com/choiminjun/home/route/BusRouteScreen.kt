@@ -66,7 +66,7 @@ internal fun BusRouteRoute(
     BusRouteScreen(
         state = state,
         onBackClick = { viewModel.onIntent(BusRouteIntent.ClickBack) },
-        onNodeClick = { nodeId, nodeName, nodeNo -> viewModel.onIntent(BusRouteIntent.ClickBusNode(nodeId, nodeName, nodeNo)) },
+        onNodeClick = { node -> viewModel.onIntent(BusRouteIntent.ClickBusNode(node)) },
         onHomeClick = navigateToHome,
     )
 }
@@ -75,7 +75,7 @@ internal fun BusRouteRoute(
 private fun BusRouteScreen(
     state: BusRouteState,
     onBackClick: () -> Unit,
-    onNodeClick: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    onNodeClick: (BusNode) -> Unit,
     onHomeClick: () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -185,7 +185,7 @@ private fun BusRouteScreen(
                             isFirst = index == 0,
                             isLast = index == state.nodes.lastIndex,
                             lineColor = SRTheme.colors.blue50,
-                            onClick = { onNodeClick(node.nodeId, node.nodeName, node.nodeNo) },
+                            onClick = { onNodeClick(node) },
                         )
                     }
                 }
@@ -288,7 +288,7 @@ private fun BusRouteScreenPreview() {
         BusRouteScreen(
             state = BusRouteState(routeNo = "51", nodes = nodes),
             onBackClick = {},
-            onNodeClick = { _, _, _ -> },
+            onNodeClick = { },
             onHomeClick = {},
         )
     }

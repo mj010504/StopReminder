@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.choiminjun.base.BaseViewModel
 import com.choiminjun.common.util.suspendRunCatching
+import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 import com.choiminjun.domain.repository.BusRepository
+import com.choiminjun.domain.repository.RecentSearchRepository
 import com.choiminjun.navigation.HomeGraph
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -16,6 +18,7 @@ import javax.inject.Inject
 class BusNodeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val busRepository: BusRepository,
+    private val recentSearchRepository: RecentSearchRepository,
 ) : BaseViewModel<BusNodeState, BusNodeIntent, BusNodeSideEffect>(
     initialState = BusNodeState(),
 ) {
@@ -29,7 +32,18 @@ class BusNodeViewModel @Inject constructor(
         when (intent) {
             BusNodeIntent.ClickBack -> postSideEffect(BusNodeSideEffect.NavigateBack)
             is BusNodeIntent.ClickAlarm -> postSideEffect(BusNodeSideEffect.NavigateToAlarm(intent.routeId))
-            is BusNodeIntent.ClickBusRoute -> postSideEffect(BusNodeSideEffect.NavigateToBusRoute(intent.routeId, intent.routeNo))
+            is BusNodeIntent.ClickBusRoute -> clickBusRoute(intent.route)
+        }
+    }
+
+    private fun clickBusRoute(busRoute: BusRoute) {
+        saveRecentRoute(busRoute)
+        postSideEffect(BusNodeSideEffect.NavigateToBusRoute(busRoute.routeId, busRoute.routeNo))
+    }
+
+    private fun saveRecentRoute(busRoute: BusRoute) = viewModelScope.launch {
+        suspendRunCatching {
+            recentSearchRepository.saveRoute(busRoute)
         }
     }
 

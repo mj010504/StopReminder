@@ -15,7 +15,7 @@ data class BusNodeState(
 sealed interface BusNodeIntent : UiIntent {
     data object ClickBack : BusNodeIntent
     data class ClickAlarm(val routeId: String) : BusNodeIntent
-    data class ClickBusRoute(val routeId: String, val routeNo: String) : BusNodeIntent
+    data class ClickBusRoute(val route: BusRoute) : BusNodeIntent
 }
 
 sealed interface BusNodeSideEffect : UiSideEffect {

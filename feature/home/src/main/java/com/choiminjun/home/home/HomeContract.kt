@@ -5,6 +5,8 @@ import com.choiminjun.base.UiSideEffect
 import com.choiminjun.base.UiState
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
+import com.choiminjun.domain.model.search.RecentNodeSearch
+import com.choiminjun.domain.model.search.RecentRouteSearch
 
 enum class SearchTab { BUS, STOP }
 
@@ -15,16 +17,20 @@ data class HomeState(
     val searchedRoutes: List<BusRoute> = emptyList(),
     val searchedNodes: List<BusNode> = emptyList(),
     val selectedTab: SearchTab = SearchTab.BUS,
+    val recentRouteSearches: List<RecentRouteSearch> = emptyList(),
+    val recentNodeSearches: List<RecentNodeSearch> = emptyList(),
 ) : UiState
 
 sealed interface HomeIntent : UiIntent {
     data class UpdateQuery(val query: String) : HomeIntent
     data object FocusSearch : HomeIntent
-    data class ClickBusRoute(val routeId: String, val routeNo: String) : HomeIntent
-    data class ClickBusNode(val nodeId: String, val nodeName: String, val nodeNo: String?) : HomeIntent
+    data class ClickBusRoute(val busRoute: BusRoute) : HomeIntent
+    data class ClickBusNode(val busNode: BusNode) : HomeIntent
     data object ClickBack : HomeIntent
     data object ClearQuery : HomeIntent
     data class SelectTab(val tab: SearchTab) : HomeIntent
+    data class DeleteRecentRouteSearch(val id: Long) : HomeIntent
+    data class DeleteRecentNodeSearch(val id: Long) : HomeIntent
 }
 
 sealed interface HomeSideEffect : UiSideEffect {

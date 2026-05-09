@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.choiminjun.designsystem.R
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
@@ -58,7 +58,7 @@ internal fun BusNodeRoute(
         state = state,
         onBackClick = { viewModel.onIntent(BusNodeIntent.ClickBack) },
         onAlarmClick = { routeId -> viewModel.onIntent(BusNodeIntent.ClickAlarm(routeId)) },
-        onRouteClick = { routeId, routeNo -> viewModel.onIntent(BusNodeIntent.ClickBusRoute(routeId, routeNo)) },
+        onRouteClick = { route -> viewModel.onIntent(BusNodeIntent.ClickBusRoute(route)) },
         onHomeClick = navigateToHome,
     )
 }
@@ -68,7 +68,7 @@ private fun BusNodeScreen(
     state: BusNodeState,
     onBackClick: () -> Unit,
     onAlarmClick: (routeId: String) -> Unit,
-    onRouteClick: (routeId: String, routeNo: String) -> Unit,
+    onRouteClick: (BusRoute) -> Unit,
     onHomeClick: () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -145,7 +145,7 @@ private fun BusNodeScreen(
                     BusNodeRouteItem(
                         route = route,
                         onAlarmClick = { onAlarmClick(route.routeId) },
-                        onRouteClick = { onRouteClick(route.routeId, route.routeNo) },
+                        onRouteClick = { onRouteClick(route) },
                     )
                 }
 
@@ -213,7 +213,7 @@ private fun BusNodeScreenPreview() {
             ),
             onBackClick = {},
             onAlarmClick = {},
-            onRouteClick = { _, _ -> },
+            onRouteClick = { },
             onHomeClick = {},
         )
     }

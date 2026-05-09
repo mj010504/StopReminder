@@ -5,6 +5,7 @@
     <string name="search_section_bus_stop">버스 정류장</string>
     <string name="search_tab_bus">버스</string>
     <string name="search_tab_stop">정류장</string>
+    <string name="search_recent_empty">자주 타는 버스를 검색해보세요.</string>
     <string name="bus_route_direction">%1$s → %2$s</string>
     <string name="back">뒤로가기</string>
     <string name="menu">메뉴</string>
