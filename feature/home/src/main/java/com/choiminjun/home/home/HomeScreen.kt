@@ -67,8 +67,8 @@ internal fun HomeRoute(
         onBusNodeClick = { busNode -> viewModel.onIntent(HomeIntent.ClickBusNode(busNode)) },
         onTabSelect = { tab -> viewModel.onIntent(HomeIntent.SelectTab(tab)) },
         onQueryClear = { viewModel.onIntent(HomeIntent.ClearQuery) },
-        onRecentRouteSearchDelete = { routeId -> viewModel.onIntent(HomeIntent.DeleteRecentRouteSearch(routeId)) },
-        onRecentNodeSearchDelete = { nodeId -> viewModel.onIntent(HomeIntent.DeleteRecentNodeSearch(nodeId)) },
+        onRecentRouteSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentRouteSearch(id)) },
+        onRecentNodeSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentNodeSearch(id)) },
     )
 }
 
@@ -83,8 +83,8 @@ private fun HomeScreen(
     onBusNodeClick: (BusNode) -> Unit,
     onTabSelect: (SearchTab) -> Unit,
     onQueryClear: () -> Unit,
-    onRecentRouteSearchDelete: (String) -> Unit,
-    onRecentNodeSearchDelete: (String) -> Unit,
+    onRecentRouteSearchDelete: (Long) -> Unit,
+    onRecentNodeSearchDelete: (Long) -> Unit,
 
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current

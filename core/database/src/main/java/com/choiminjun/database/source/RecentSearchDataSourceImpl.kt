@@ -12,18 +12,18 @@ class RecentSearchDataSourceImpl @Inject constructor(
     override fun getRecentRoutes(): Flow<List<RecentRouteEntity>> = dao.getAllRoutes()
 
     override suspend fun saveRoute(entity: RecentRouteEntity) {
-        dao.deleteNode(entity.routeId)
+        dao.deleteNode(entity.id)
         dao.insertRoute(entity)
     }
 
-    override suspend fun deleteRoute(routeId: String) = dao.deleteRoute(routeId)
+    override suspend fun deleteRoute(id: Long) = dao.deleteRoute(id)
 
     override fun getRecentNodes(): Flow<List<RecentNodeEntity>> = dao.getAllNodes()
 
     override suspend fun saveNode(entity: RecentNodeEntity) {
-        dao.deleteNode(entity.nodeId)
+        dao.deleteNode(entity.id)
         dao.insertNode(entity)
     }
 
-    override suspend fun deleteNode(nodeId: String) = dao.deleteNode(nodeId)
+    override suspend fun deleteNode(id: Long) = dao.deleteNode(id)
 }

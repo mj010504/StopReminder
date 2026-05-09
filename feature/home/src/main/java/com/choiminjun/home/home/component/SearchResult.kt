@@ -53,8 +53,8 @@ internal fun SearchResult(
     recentNodeSearches: List<RecentNodeSearch>,
     onBusRouteClick: (BusRoute) -> Unit,
     onBusNodeClick: (BusNode) -> Unit,
-    onRecentRouteSearchDelete: (String) -> Unit,
-    onRecentNodeSearchDelete: (String) -> Unit,
+    onRecentRouteSearchDelete: (Long) -> Unit,
+    onRecentNodeSearchDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val visibleRoutes = if (selectedTab == SearchTab.BUS) routes else emptyList()
@@ -94,7 +94,7 @@ internal fun SearchResult(
                                     onItemClick = {
                                         onBusRouteClick(item.toBusRoute())
                                     },
-                                    onDeleteClick = { onRecentRouteSearchDelete(item.routeId) },
+                                    onDeleteClick = { onRecentRouteSearchDelete(item.id) },
                                 )
                             }
                         }
@@ -106,7 +106,7 @@ internal fun SearchResult(
                                     onItemClick = {
                                         onBusNodeClick(item.toBusNode())
                                     },
-                                    onDeleteClick = { onRecentNodeSearchDelete(item.nodeId) },
+                                    onDeleteClick = { onRecentNodeSearchDelete(item.id) },
                                 )
                             }
                         }

@@ -15,8 +15,8 @@ interface RecentSearchDao {
     @Insert
     suspend fun insertRoute(entity: RecentRouteEntity)
 
-    @Query("DELETE FROM recent_route WHERE routeId = :routeId")
-    suspend fun deleteRoute(routeId: String)
+    @Query("DELETE FROM recent_route WHERE id = :id")
+    suspend fun deleteRoute(id: Long)
 
     @Query("SELECT * FROM recent_node ORDER BY id DESC")
     fun getAllNodes(): Flow<List<RecentNodeEntity>>
@@ -24,6 +24,6 @@ interface RecentSearchDao {
     @Insert
     suspend fun insertNode(entity: RecentNodeEntity)
 
-    @Query("DELETE FROM recent_node WHERE nodeId = :nodeId")
-    suspend fun deleteNode(nodeId: String)
+    @Query("DELETE FROM recent_node WHERE id = :id")
+    suspend fun deleteNode(id: Long)
 }

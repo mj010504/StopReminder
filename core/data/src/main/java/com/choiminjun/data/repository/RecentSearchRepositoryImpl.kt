@@ -25,8 +25,8 @@ class RecentSearchRepositoryImpl @Inject constructor(
         dataSource.saveRoute(route.toEntity())
     }
 
-    override suspend fun deleteRoute(routeId: String) {
-        dataSource.deleteRoute(routeId)
+    override suspend fun deleteRoute(id: Long) {
+        dataSource.deleteRoute(id)
     }
 
     override fun getRecentNodeSearches(): Flow<List<RecentNodeSearch>> =
@@ -38,8 +38,8 @@ class RecentSearchRepositoryImpl @Inject constructor(
         dataSource.saveNode(node.toEntity())
     }
 
-    override suspend fun deleteNode(nodeId: String) {
-        dataSource.deleteNode(nodeId)
+    override suspend fun deleteNode(id: Long) {
+        dataSource.deleteNode(id)
     }
 
     // --- Mapper ---

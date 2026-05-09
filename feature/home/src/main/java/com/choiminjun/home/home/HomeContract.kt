@@ -29,8 +29,8 @@ sealed interface HomeIntent : UiIntent {
     data object ClickBack : HomeIntent
     data object ClearQuery : HomeIntent
     data class SelectTab(val tab: SearchTab) : HomeIntent
-    data class DeleteRecentRouteSearch(val routeId: String) : HomeIntent
-    data class DeleteRecentNodeSearch(val nodeId: String) : HomeIntent
+    data class DeleteRecentRouteSearch(val id: Long) : HomeIntent
+    data class DeleteRecentNodeSearch(val id: Long) : HomeIntent
 }
 
 sealed interface HomeSideEffect : UiSideEffect {

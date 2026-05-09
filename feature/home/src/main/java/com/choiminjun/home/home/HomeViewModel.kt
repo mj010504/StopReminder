@@ -35,8 +35,8 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.UpdateQuery -> updateQuery(intent.query)
             HomeIntent.ClearQuery -> clearQuery()
             is HomeIntent.SelectTab -> selectTab(intent)
-            is HomeIntent.DeleteRecentRouteSearch -> deleteRecentRouteSearch(intent.routeId)
-            is HomeIntent.DeleteRecentNodeSearch -> deleteRecentNodeSearch(intent.nodeId)
+            is HomeIntent.DeleteRecentRouteSearch -> deleteRecentRouteSearch(intent.id)
+            is HomeIntent.DeleteRecentNodeSearch -> deleteRecentNodeSearch(intent.id)
         }
     }
 
@@ -52,14 +52,6 @@ class HomeViewModel @Inject constructor(
 
     private fun selectTab(intent: HomeIntent.SelectTab) {
         reduce { copy(selectedTab = intent.tab) }
-    }
-
-    private fun deleteRecentRouteSearch(routeId: String) {
-        viewModelScope.launch { recentSearchRepository.deleteRoute(routeId) }
-    }
-
-    private fun deleteRecentNodeSearch(nodeId: String) {
-        viewModelScope.launch { recentSearchRepository.deleteNode(nodeId) }
     }
 
     private fun focusSearch() {
@@ -142,6 +134,16 @@ class HomeViewModel @Inject constructor(
             recentSearchRepository.saveNode(busNode)
         }
     }
+
+    private fun deleteRecentRouteSearch(id: Long) =
+        viewModelScope.launch {
+            suspendRunCatching { recentSearchRepository.deleteRoute(id) }
+        }
+
+    private fun deleteRecentNodeSearch(id: Long) =
+        viewModelScope.launch {
+            suspendRunCatching { recentSearchRepository.deleteNode(id) }
+        }
 
     private fun loadRecentSearches() {
         viewModelScope.launch {

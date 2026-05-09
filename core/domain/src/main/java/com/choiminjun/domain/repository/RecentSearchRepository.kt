@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 interface RecentSearchRepository {
     fun getRecentRouteSearches(): Flow<List<RecentRouteSearch>>
     suspend fun saveRoute(route: BusRoute)
-    suspend fun deleteRoute(routeId: String)
+    suspend fun deleteRoute(id: Long)
     fun getRecentNodeSearches(): Flow<List<RecentNodeSearch>>
     suspend fun saveNode(node: BusNode)
-    suspend fun deleteNode(nodeId: String)
+    suspend fun deleteNode(id: Long)
 }
