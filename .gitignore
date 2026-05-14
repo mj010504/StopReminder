@@ -1,12 +1,8 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea
+.kotlin/sessions
 .DS_Store
 /build
 /captures
@@ -21,3 +17,4 @@ gradle.xml
 CLAUDE.md
 spec/
 .omc/
+AGENTS.md

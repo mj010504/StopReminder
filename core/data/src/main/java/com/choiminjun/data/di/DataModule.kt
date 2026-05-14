@@ -1,7 +1,9 @@
 package com.choiminjun.data.di
 
+import com.choiminjun.data.repository.AlarmRepositoryImpl
 import com.choiminjun.data.repository.BusRepositoryImpl
 import com.choiminjun.data.repository.RecentSearchRepositoryImpl
+import com.choiminjun.domain.repository.AlarmRepository
 import com.choiminjun.domain.repository.BusRepository
 import com.choiminjun.domain.repository.RecentSearchRepository
 import dagger.Binds
@@ -15,11 +17,15 @@ import javax.inject.Singleton
 abstract class DataModule {
     @Binds
     @Singleton
-    abstract fun bindBusRepository(busRepositoryImpl: BusRepositoryImpl): BusRepository
+    abstract fun bindBusRepository(impl: BusRepositoryImpl): BusRepository
 
     @Binds
     @Singleton
     abstract fun bindRecentSearchRepository(
         impl: RecentSearchRepositoryImpl,
     ): RecentSearchRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAlarmRepository(impl: AlarmRepositoryImpl): AlarmRepository
 }

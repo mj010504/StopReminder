@@ -33,6 +33,7 @@ include(":core:network")
 include(":core:base")
 include(":core:navigation")
 include(":core:database")
+include(":core:datastore")
 
 include(":feature")
 include(":feature:home")

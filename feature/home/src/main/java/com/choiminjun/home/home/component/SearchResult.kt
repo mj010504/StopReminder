@@ -88,7 +88,7 @@ internal fun SearchResult(
                 } else {
                     when (selectedTab) {
                         SearchTab.BUS -> {
-                            items(recentRouteSearches, key = { "route_${it.routeId}" }) { item ->
+                            items(recentRouteSearches, key = { it.id }) { item ->
                                 RecentRouteSearchItem(
                                     item = item,
                                     onItemClick = {
@@ -100,7 +100,7 @@ internal fun SearchResult(
                         }
 
                         SearchTab.STOP -> {
-                            items(recentNodeSearches, key = { "node_${it.nodeId}" }) { item ->
+                            items(recentNodeSearches, key = { it.id }) { item ->
                                 RecentNodeSearchItem(
                                     item = item,
                                     onItemClick = {

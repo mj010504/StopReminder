@@ -102,4 +102,9 @@ data class SRTypography(
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
     ),
+    val bodyXSSB: TextStyle = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 12.sp,
+    ),
 )

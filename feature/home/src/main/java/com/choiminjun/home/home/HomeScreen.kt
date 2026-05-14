@@ -15,10 +15,11 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,12 +34,14 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.choiminjun.designsystem.component.SRIconButton
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 import com.choiminjun.home.R
+import com.choiminjun.home.home.component.BoardingBanner
 import com.choiminjun.home.home.component.SearchField
 import com.choiminjun.home.home.component.SearchResult
 import com.choiminjun.designsystem.R as DesignSystemR
@@ -48,6 +51,7 @@ internal fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
     navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
     navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    navigateToAlarmRing: () -> Unit,
 ) {
     val state by viewModel.collectAsState()
 
@@ -55,6 +59,7 @@ internal fun HomeRoute(
         when (effect) {
             is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.routeId, effect.routeNo)
             is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(effect.nodeId, effect.nodeName, effect.nodeNo)
+            HomeSideEffect.NavigateToAlarmRing -> navigateToAlarmRing()
         }
     }
 
@@ -69,6 +74,8 @@ internal fun HomeRoute(
         onQueryClear = { viewModel.onIntent(HomeIntent.ClearQuery) },
         onRecentRouteSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentRouteSearch(id)) },
         onRecentNodeSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentNodeSearch(id)) },
+        onAlarmBannerClick = { viewModel.onIntent(HomeIntent.ClickAlarmBanner) },
+        onAlarmCancelClick = { viewModel.onIntent(HomeIntent.CancelAlarm) },
     )
 }
 
@@ -85,11 +92,11 @@ private fun HomeScreen(
     onQueryClear: () -> Unit,
     onRecentRouteSearchDelete: (Long) -> Unit,
     onRecentNodeSearchDelete: (Long) -> Unit,
-
+    onAlarmBannerClick: () -> Unit,
+    onAlarmCancelClick: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val imeVisible = WindowInsets.isImeVisible
-
     val handleBack: () -> Unit = {
         if (imeVisible) keyboardController?.hide() else onBackClick()
     }
@@ -112,15 +119,14 @@ private fun HomeScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.space16),
         ) {
-            Icon(
+            SRIconButton(
                 imageVector = if (state.isSearching) {
                     ImageVector.vectorResource(DesignSystemR.drawable.ic_arrow_left)
                 } else {
                     ImageVector.vectorResource(DesignSystemR.drawable.ic_menu)
                 },
                 contentDescription = if (state.isSearching) "뒤로가기" else "메뉴",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.clickable { handleBack() },
+                onClick = { handleBack() },
             )
             SearchField(
                 value = state.searchQuery,
@@ -169,6 +175,24 @@ private fun HomeScreen(
                     onRecentRouteSearchDelete = onRecentRouteSearchDelete,
                     onRecentNodeSearchDelete = onRecentNodeSearchDelete,
                 )
+            }
+        } else {
+            state.alarmInfo?.let { alarmInfo ->
+                // FIXME: 현재는 배너 클릭 시 AlarmRingScreen으로 진입.
+                //        실제로는 버스가 목적지에 근접할 때 알람 이벤트로 강제 전환해야 함.
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.space20, vertical = Spacing.space16),
+                ) {
+                    BoardingBanner(
+                        routeNo = alarmInfo.routeNo,
+                        destNodeName = alarmInfo.destNodeName,
+                        stopsBeforeAlarm = alarmInfo.stopsBeforeAlarm,
+                        onClick = onAlarmBannerClick,
+                        onCancelClick = onAlarmCancelClick,
+                    )
+                }
             }
         }
     }
@@ -230,6 +254,8 @@ private fun HomeScreenPreview() {
             onQueryClear = {},
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
+            onAlarmBannerClick = {},
+            onAlarmCancelClick = {},
         )
     }
 }
@@ -251,6 +277,8 @@ private fun HomeScreenPrevSearchPreview() {
             onQueryClear = {},
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
+            onAlarmBannerClick = {},
+            onAlarmCancelClick = {},
         )
     }
 }
@@ -292,6 +320,8 @@ private fun HomeScreenSearchBusTabPreview() {
             onQueryClear = {},
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
+            onAlarmBannerClick = {},
+            onAlarmCancelClick = {},
         )
     }
 }
@@ -331,6 +361,8 @@ private fun HomeScreenSearchStopTabPreview() {
             onQueryClear = {},
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
+            onAlarmBannerClick = {},
+            onAlarmCancelClick = {},
         )
     }
 }

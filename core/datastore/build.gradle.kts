@@ -4,13 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.choiminjun.data"
+    namespace = "com.choiminjun.datastore"
 }
 
 dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.common)
-    implementation(projects.core.network)
-    implementation(projects.core.database)
-    implementation(projects.core.datastore)
+    implementation(libs.androidx.datastore.preferences)
 }
