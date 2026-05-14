@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,16 +29,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.choiminjun.designsystem.R
+import com.choiminjun.designsystem.component.SRIconButton
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
-import com.choiminjun.designsystem.util.noRippleClickable
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 
 @Composable
 internal fun BusNodeRoute(
     onBackClick: () -> Unit,
-    onAlarmClick: (routeId: String) -> Unit,
+    onAlarmClick: (routeId: String, routeNo: String) -> Unit,
     navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
     navigateToHome: () -> Unit,
     viewModel: BusNodeViewModel = hiltViewModel(),
@@ -49,7 +48,7 @@ internal fun BusNodeRoute(
     viewModel.collectSideEffect { effect ->
         when (effect) {
             BusNodeSideEffect.NavigateBack -> onBackClick()
-            is BusNodeSideEffect.NavigateToAlarm -> onAlarmClick(effect.routeId)
+            is BusNodeSideEffect.NavigateToAlarm -> onAlarmClick(effect.routeId, effect.routeNo)
             is BusNodeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.routeId, effect.routeNo)
         }
     }
@@ -57,7 +56,7 @@ internal fun BusNodeRoute(
     BusNodeScreen(
         state = state,
         onBackClick = { viewModel.onIntent(BusNodeIntent.ClickBack) },
-        onAlarmClick = { routeId -> viewModel.onIntent(BusNodeIntent.ClickAlarm(routeId)) },
+        onAlarmClick = { routeId, routeNo -> viewModel.onIntent(BusNodeIntent.ClickAlarm(routeId, routeNo)) },
         onRouteClick = { route -> viewModel.onIntent(BusNodeIntent.ClickBusRoute(route)) },
         onHomeClick = navigateToHome,
     )
@@ -67,7 +66,7 @@ internal fun BusNodeRoute(
 private fun BusNodeScreen(
     state: BusNodeState,
     onBackClick: () -> Unit,
-    onAlarmClick: (routeId: String) -> Unit,
+    onAlarmClick: (routeId: String, routeNo: String) -> Unit,
     onRouteClick: (BusRoute) -> Unit,
     onHomeClick: () -> Unit,
 ) {
@@ -87,11 +86,10 @@ private fun BusNodeScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.space12),
         ) {
-            Icon(
+            SRIconButton(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_left),
                 contentDescription = "뒤로가기",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.noRippleClickable { onBackClick() },
+                onClick = { onBackClick() },
             )
             Text(
                 text = state.nodeName,
@@ -100,17 +98,15 @@ private fun BusNodeScreen(
                 modifier = Modifier.weight(1f),
             )
             // TODO: 즐겨찾기 기능 구현
-            Icon(
+            SRIconButton(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_star),
                 contentDescription = "즐겨찾기",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.noRippleClickable { },
+                onClick = { },
             )
-            Icon(
+            SRIconButton(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_home),
                 contentDescription = "홈",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.noRippleClickable { onHomeClick() },
+                onClick = { onHomeClick() },
             )
         }
 
@@ -144,7 +140,7 @@ private fun BusNodeScreen(
                 items(state.routes, key = { it.routeId }) { route ->
                     BusNodeRouteItem(
                         route = route,
-                        onAlarmClick = { onAlarmClick(route.routeId) },
+                        onAlarmClick = { onAlarmClick(route.routeId, route.routeNo) },
                         onRouteClick = { onRouteClick(route) },
                     )
                 }
@@ -183,11 +179,10 @@ private fun BusNodeRouteItem(
                 color = SRTheme.colors.textSecondary,
             )
         }
-        Icon(
+        SRIconButton(
             imageVector = ImageVector.vectorResource(R.drawable.ic_bell),
             contentDescription = "알림",
-            tint = SRTheme.colors.icon,
-            modifier = Modifier.clickable { onAlarmClick() },
+            onClick = { onAlarmClick() },
         )
     }
     HorizontalDivider(
@@ -212,7 +207,7 @@ private fun BusNodeScreenPreview() {
                 ),
             ),
             onBackClick = {},
-            onAlarmClick = {},
+            onAlarmClick = { _, _ -> },
             onRouteClick = { },
             onHomeClick = {},
         )

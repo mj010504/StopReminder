@@ -31,7 +31,7 @@ class BusNodeViewModel @Inject constructor(
     override suspend fun handleIntent(intent: BusNodeIntent) {
         when (intent) {
             BusNodeIntent.ClickBack -> postSideEffect(BusNodeSideEffect.NavigateBack)
-            is BusNodeIntent.ClickAlarm -> postSideEffect(BusNodeSideEffect.NavigateToAlarm(intent.routeId))
+            is BusNodeIntent.ClickAlarm -> postSideEffect(BusNodeSideEffect.NavigateToAlarm(intent.routeId, intent.routeNo))
             is BusNodeIntent.ClickBusRoute -> clickBusRoute(intent.route)
         }
     }

@@ -31,8 +31,11 @@ fun AppNavHost(
                     popUpTo(HomeBaseRoute) { inclusive = false }
                 }
             },
-            navigateToAlarmSetting = { _ ->
-                // TODO: 알람 설정 화면으로 이동
+            navigateToAlarmSetting = { routeId, routeNo ->
+                navController.navigate(HomeGraph.AlarmSettingRoute(routeId, routeNo))
+            },
+            navigateToAlarmRing = {
+                navController.navigate(HomeGraph.AlarmRingRoute)
             },
         )
     }

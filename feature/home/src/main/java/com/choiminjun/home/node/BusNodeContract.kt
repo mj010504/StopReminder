@@ -14,12 +14,12 @@ data class BusNodeState(
 
 sealed interface BusNodeIntent : UiIntent {
     data object ClickBack : BusNodeIntent
-    data class ClickAlarm(val routeId: String) : BusNodeIntent
+    data class ClickAlarm(val routeId: String, val routeNo: String) : BusNodeIntent
     data class ClickBusRoute(val route: BusRoute) : BusNodeIntent
 }
 
 sealed interface BusNodeSideEffect : UiSideEffect {
     data object NavigateBack : BusNodeSideEffect
-    data class NavigateToAlarm(val routeId: String) : BusNodeSideEffect
+    data class NavigateToAlarm(val routeId: String, val routeNo: String) : BusNodeSideEffect
     data class NavigateToBusRoute(val routeId: String, val routeNo: String) : BusNodeSideEffect
 }

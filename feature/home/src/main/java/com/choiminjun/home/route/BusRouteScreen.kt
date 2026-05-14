@@ -37,9 +37,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.choiminjun.designsystem.R
+import com.choiminjun.designsystem.component.SRIconButton
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
-import com.choiminjun.designsystem.util.noRippleClickable
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.CityCode
 
@@ -94,11 +94,10 @@ private fun BusRouteScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.space12),
         ) {
-            Icon(
+            SRIconButton(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_left),
                 contentDescription = "뒤로가기",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.noRippleClickable { onBackClick() },
+                onClick = { onBackClick() },
             )
             Text(
                 text = state.routeNo,
@@ -107,17 +106,15 @@ private fun BusRouteScreen(
                 modifier = Modifier.weight(1f),
             )
             // TODO: 즐겨찾기 기능 구현
-            Icon(
+            SRIconButton(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_star),
                 contentDescription = "즐겨찾기",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.noRippleClickable { },
+                onClick = { },
             )
-            Icon(
+            SRIconButton(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_home),
                 contentDescription = "홈으로",
-                tint = SRTheme.colors.icon,
-                modifier = Modifier.noRippleClickable { onHomeClick() },
+                onClick = { onHomeClick() },
             )
         }
 
