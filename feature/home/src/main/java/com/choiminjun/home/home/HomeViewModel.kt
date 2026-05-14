@@ -7,6 +7,7 @@ import com.choiminjun.common.util.suspendRunCatching
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
+import com.choiminjun.domain.repository.AlarmRepository
 import com.choiminjun.domain.repository.BusRepository
 import com.choiminjun.domain.repository.RecentSearchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,12 +19,22 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val busRepository: BusRepository,
     private val recentSearchRepository: RecentSearchRepository,
+    private val alarmRepository: AlarmRepository,
 ) : BaseViewModel<HomeState, HomeIntent, HomeSideEffect>(initialState = HomeState()) {
 
     private var searchJob: Job? = null
 
     init {
         loadRecentSearches()
+        observeAlarm()
+    }
+
+    private fun observeAlarm() {
+        viewModelScope.launch {
+            alarmRepository.observeAlarm().collect { alarmInfo ->
+                reduce { copy(alarmInfo = alarmInfo.takeIf { it.routeId.isNotBlank() }) }
+            }
+        }
     }
 
     override suspend fun handleIntent(intent: HomeIntent) {
@@ -37,6 +48,8 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.SelectTab -> selectTab(intent)
             is HomeIntent.DeleteRecentRouteSearch -> deleteRecentRouteSearch(intent.id)
             is HomeIntent.DeleteRecentNodeSearch -> deleteRecentNodeSearch(intent.id)
+            HomeIntent.ClickAlarmBanner -> postSideEffect(HomeSideEffect.NavigateToAlarmRing)
+            HomeIntent.CancelAlarm -> cancelAlarm()
         }
     }
 
@@ -144,6 +157,10 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             suspendRunCatching { recentSearchRepository.deleteNode(id) }
         }
+
+    private fun cancelAlarm() = viewModelScope.launch {
+        suspendRunCatching { alarmRepository.clearAlarm() }
+    }
 
     private fun loadRecentSearches() {
         viewModelScope.launch {
