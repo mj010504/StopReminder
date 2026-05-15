@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,8 @@ import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import com.choiminjun.home.R as HR
 
 @Composable
@@ -55,6 +58,8 @@ internal fun BusNodeRoute(
     val snackbarHostState = remember { SnackbarHostState() }
     val favoriteAddedMessage = stringResource(HR.string.favorite_added)
     val favoriteRemovedMessage = stringResource(HR.string.favorite_removed)
+    val scope = rememberCoroutineScope()
+    var snackbarJob: Job? = null
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
@@ -70,10 +75,13 @@ internal fun BusNodeRoute(
             )
 
             is BusNodeSideEffect.ShowSnackbar -> {
-                snackbarHostState.currentSnackbarData?.dismiss()
-                snackbarHostState.showSnackbar(
-                    if (effect.added) favoriteAddedMessage else favoriteRemovedMessage,
-                )
+                snackbarJob?.cancel()
+                snackbarJob = scope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(
+                        if (effect.added) favoriteAddedMessage else favoriteRemovedMessage,
+                    )
+                }
             }
         }
     }
