@@ -2,9 +2,11 @@ package com.choiminjun.data.di
 
 import com.choiminjun.data.repository.AlarmRepositoryImpl
 import com.choiminjun.data.repository.BusRepositoryImpl
+import com.choiminjun.data.repository.FavoriteRepositoryImpl
 import com.choiminjun.data.repository.RecentSearchRepositoryImpl
 import com.choiminjun.domain.repository.AlarmRepository
 import com.choiminjun.domain.repository.BusRepository
+import com.choiminjun.domain.repository.FavoriteRepository
 import com.choiminjun.domain.repository.RecentSearchRepository
 import dagger.Binds
 import dagger.Module
@@ -28,4 +30,8 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindAlarmRepository(impl: AlarmRepositoryImpl): AlarmRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFavoriteRepository(impl: FavoriteRepositoryImpl): FavoriteRepository
 }
