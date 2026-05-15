@@ -25,7 +25,7 @@ interface FavoriteDao {
     @Query("SELECT * FROM favorite_node")
     fun getAllNodes(): Flow<List<FavoriteNodeEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insertNode(entity: FavoriteNodeEntity)
 
     @Query("DELETE FROM favorite_node WHERE nodeId = :nodeId")

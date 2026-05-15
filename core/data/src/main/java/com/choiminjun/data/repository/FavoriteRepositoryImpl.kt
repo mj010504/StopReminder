@@ -10,11 +10,15 @@ import com.choiminjun.domain.repository.FavoriteRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 class FavoriteRepositoryImpl @Inject constructor(
     private val dataSource: FavoriteDataSource,
 ) : FavoriteRepository {
+    private val toggleMutex = Mutex()
+
     override fun getFavoriteRoutes(): Flow<List<BusRoute>> =
         dataSource.getFavoriteRoutes().map { entities -> entities.map { it.toDomain() } }
 
@@ -22,18 +26,22 @@ class FavoriteRepositoryImpl @Inject constructor(
         dataSource.getFavoriteNodes().map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun toggleFavoriteRoute(route: BusRoute) {
-        if (dataSource.isFavoriteRoute(route.routeId).first()) {
-            dataSource.deleteFavoriteRoute(route.routeId)
-        } else {
-            dataSource.saveFavoriteRoute(route.toEntity())
+        toggleMutex.withLock {
+            if (dataSource.isFavoriteRoute(route.routeId).first()) {
+                dataSource.deleteFavoriteRoute(route.routeId)
+            } else {
+                dataSource.saveFavoriteRoute(route.toEntity())
+            }
         }
     }
 
     override suspend fun toggleFavoriteNode(node: BusNode) {
-        if (dataSource.isFavoriteNode(node.nodeId).first()) {
-            dataSource.deleteFavoriteNode(node.nodeId)
-        } else {
-            dataSource.saveFavoriteNode(node.toEntity())
+        toggleMutex.withLock {
+            if (dataSource.isFavoriteNode(node.nodeId).first()) {
+                dataSource.deleteFavoriteNode(node.nodeId)
+            } else {
+                dataSource.saveFavoriteNode(node.toEntity())
+            }
         }
     }
 

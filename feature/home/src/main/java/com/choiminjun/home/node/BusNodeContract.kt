@@ -6,8 +6,10 @@ import com.choiminjun.base.UiState
 import com.choiminjun.domain.model.bus.BusRoute
 
 data class BusNodeState(
+    val nodeId: String = "",
     val nodeName: String = "",
     val nodeNo: String? = null,
+    val cityCode: String = "",
     val isLoading: Boolean = false,
     val routes: List<BusRoute> = emptyList(),
     val isFavorite: Boolean = false,

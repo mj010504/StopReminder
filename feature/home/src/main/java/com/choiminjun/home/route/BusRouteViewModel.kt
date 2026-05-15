@@ -13,6 +13,7 @@ import com.choiminjun.domain.repository.FavoriteRepository
 import com.choiminjun.domain.repository.RecentSearchRepository
 import com.choiminjun.navigation.HomeGraph
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,17 +26,26 @@ class BusRouteViewModel @Inject constructor(
 ) : BaseViewModel<BusRouteState, BusRouteIntent, BusRouteSideEffect>(
     initialState = BusRouteState(),
 ) {
-    private lateinit var currentRoute: HomeGraph.BusRouteRoute
+    private var toggleFavoriteJob: Job? = null
 
     init {
-        initRoute(savedStateHandle)
-        loadNodes(currentRoute.routeId)
-        observeFavorite(currentRoute.routeId)
+        val route = savedStateHandle.toRoute<HomeGraph.BusRouteRoute>()
+        initRoute(route)
+        loadNodes(route.routeId)
+        observeFavorite(route.routeId)
     }
 
-    private fun initRoute(savedStateHandle: SavedStateHandle) {
-        currentRoute = savedStateHandle.toRoute<HomeGraph.BusRouteRoute>()
-        reduce { copy(routeNo = currentRoute.routeNo) }
+    private fun initRoute(route: HomeGraph.BusRouteRoute) {
+        reduce {
+            copy(
+                routeId = route.routeId,
+                routeNo = route.routeNo,
+                routeType = route.routeType,
+                startNodeName = route.startNodeName,
+                endNodeName = route.endNodeName,
+                cityCode = route.cityCode,
+            )
+        }
     }
 
     override suspend fun handleIntent(intent: BusRouteIntent) {
@@ -72,21 +82,24 @@ class BusRouteViewModel @Inject constructor(
         }
     }
 
-    private fun toggleFavorite() = viewModelScope.launch {
-        val willAdd = !state.value.isFavorite
-        suspendRunCatching {
-            favoriteRepository.toggleFavoriteRoute(
-                BusRoute(
-                    routeId = currentRoute.routeId,
-                    routeNo = currentRoute.routeNo,
-                    routeType = currentRoute.routeType,
-                    startNodeName = currentRoute.startNodeName,
-                    endNodeName = currentRoute.endNodeName,
-                    cityCode = CityCode.valueOf(currentRoute.cityCode),
-                ),
-            )
-        }.onSuccess {
-            postSideEffect(BusRouteSideEffect.ShowSnackbar(added = willAdd))
+    private fun toggleFavorite() {
+        toggleFavoriteJob?.cancel()
+        toggleFavoriteJob = viewModelScope.launch {
+            val willAdd = !state.value.isFavorite
+            suspendRunCatching {
+                favoriteRepository.toggleFavoriteRoute(
+                    BusRoute(
+                        routeId = state.value.routeId,
+                        routeNo = state.value.routeNo,
+                        routeType = state.value.routeType,
+                        startNodeName = state.value.startNodeName,
+                        endNodeName = state.value.endNodeName,
+                        cityCode = CityCode.valueOf(state.value.cityCode),
+                    ),
+                )
+            }.onSuccess {
+                postSideEffect(BusRouteSideEffect.ShowSnackbar(added = willAdd))
+            }
         }
     }
 
