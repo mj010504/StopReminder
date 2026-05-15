@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -22,15 +21,20 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -38,10 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.choiminjun.designsystem.R
 import com.choiminjun.designsystem.component.SRIconButton
+import com.choiminjun.designsystem.component.SRSnackbar
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.CityCode
+import com.choiminjun.home.R as HR
 
 private val StopItemHeight: Dp = 68.dp
 private val StopIconSize: Dp = 24.dp
@@ -50,23 +56,40 @@ private val StopIconAreaWidth: Dp = Spacing.space20 + StopIconSize + Spacing.spa
 @Composable
 internal fun BusRouteRoute(
     onBackClick: () -> Unit,
-    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?, cityCode: String) -> Unit,
     navigateToHome: () -> Unit,
     viewModel: BusRouteViewModel = hiltViewModel(),
 ) {
     val state by viewModel.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val favoriteAddedMessage = stringResource(HR.string.favorite_added)
+    val favoriteRemovedMessage = stringResource(HR.string.favorite_removed)
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
             BusRouteSideEffect.NavigateBack -> onBackClick()
-            is BusRouteSideEffect.NavigateToBusNode -> navigateToBusNode(effect.nodeId, effect.nodeName, effect.nodeNo)
+            is BusRouteSideEffect.NavigateToBusNode -> navigateToBusNode(
+                effect.nodeId,
+                effect.nodeName,
+                effect.nodeNo,
+                effect.cityCode,
+            )
+
+            is BusRouteSideEffect.ShowSnackbar -> {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    if (effect.added) favoriteAddedMessage else favoriteRemovedMessage,
+                )
+            }
         }
     }
 
     BusRouteScreen(
         state = state,
+        snackbarHostState = snackbarHostState,
         onBackClick = { viewModel.onIntent(BusRouteIntent.ClickBack) },
         onNodeClick = { node -> viewModel.onIntent(BusRouteIntent.ClickBusNode(node)) },
+        onFavoriteClick = { viewModel.onIntent(BusRouteIntent.ToggleFavorite) },
         onHomeClick = navigateToHome,
     )
 }
@@ -74,50 +97,65 @@ internal fun BusRouteRoute(
 @Composable
 private fun BusRouteScreen(
     state: BusRouteState,
+    snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit,
     onNodeClick: (BusNode) -> Unit,
+    onFavoriteClick: () -> Unit,
     onHomeClick: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SRTheme.colors.background)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.space20, vertical = Spacing.space12),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.space12),
-        ) {
-            SRIconButton(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_left),
-                contentDescription = "뒤로가기",
-                onClick = { onBackClick() },
-            )
-            Text(
-                text = state.routeNo,
-                style = SRTheme.typography.bodyXMM,
-                color = SRTheme.colors.blue50,
-                modifier = Modifier.weight(1f),
-            )
-            // TODO: 즐겨찾기 기능 구현
-            SRIconButton(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_star),
-                contentDescription = "즐겨찾기",
-                onClick = { },
-            )
-            SRIconButton(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_home),
-                contentDescription = "홈으로",
-                onClick = { onHomeClick() },
-            )
-        }
-
+    Scaffold(
+        containerColor = SRTheme.colors.background,
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.space20, vertical = Spacing.space12)
+                    .statusBarsPadding(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.space12),
+            ) {
+                SRIconButton(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_left),
+                    contentDescription = "뒤로가기",
+                    onClick = { onBackClick() },
+                )
+                Text(
+                    text = state.routeNo,
+                    style = SRTheme.typography.bodyXMM,
+                    color = SRTheme.colors.blue50,
+                    modifier = Modifier.weight(1f),
+                )
+                SRIconButton(
+                    imageVector = if (state.isFavorite) {
+                        ImageVector.vectorResource(R.drawable.ic_star_fill)
+                    } else {
+                        ImageVector.vectorResource(R.drawable.ic_star)
+                    },
+                    contentDescription = "즐겨찾기",
+                    tint = if (state.isFavorite) SRTheme.colors.yellow else Color.Unspecified,
+                    onClick = onFavoriteClick,
+                )
+                SRIconButton(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_home),
+                    contentDescription = "홈으로",
+                    onClick = { onHomeClick() },
+                )
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+            ) {
+                SRSnackbar(
+                    modifier = Modifier
+                        .padding(bottom = 20.dp),
+                    snackbarData = it,
+                )
+            }
+        },
+    ) { innerPadding ->
         if (state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -127,7 +165,9 @@ private fun BusRouteScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 state = listState,
             ) {
                 item {
@@ -284,8 +324,10 @@ private fun BusRouteScreenPreview() {
     SRTheme {
         BusRouteScreen(
             state = BusRouteState(routeNo = "51", nodes = nodes),
+            snackbarHostState = remember { SnackbarHostState() },
             onBackClick = {},
             onNodeClick = { },
+            onFavoriteClick = {},
             onHomeClick = {},
         )
     }

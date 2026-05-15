@@ -10,16 +10,26 @@ data class BusNodeState(
     val nodeNo: String? = null,
     val isLoading: Boolean = false,
     val routes: List<BusRoute> = emptyList(),
+    val isFavorite: Boolean = false,
 ) : UiState
 
 sealed interface BusNodeIntent : UiIntent {
     data object ClickBack : BusNodeIntent
     data class ClickAlarm(val routeId: String, val routeNo: String) : BusNodeIntent
     data class ClickBusRoute(val route: BusRoute) : BusNodeIntent
+    data object ToggleFavorite : BusNodeIntent
 }
 
 sealed interface BusNodeSideEffect : UiSideEffect {
     data object NavigateBack : BusNodeSideEffect
     data class NavigateToAlarm(val routeId: String, val routeNo: String) : BusNodeSideEffect
-    data class NavigateToBusRoute(val routeId: String, val routeNo: String) : BusNodeSideEffect
+    data class NavigateToBusRoute(
+        val routeId: String,
+        val routeNo: String,
+        val routeType: String,
+        val startNodeName: String,
+        val endNodeName: String,
+        val cityCode: String,
+    ) : BusNodeSideEffect
+    data class ShowSnackbar(val added: Boolean) : BusNodeSideEffect
 }
