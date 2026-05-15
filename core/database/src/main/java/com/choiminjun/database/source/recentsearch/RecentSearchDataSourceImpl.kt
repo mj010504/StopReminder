@@ -1,4 +1,4 @@
-package com.choiminjun.database.source
+package com.choiminjun.database.source.recentsearch
 
 import com.choiminjun.database.dao.RecentSearchDao
 import com.choiminjun.database.model.RecentNodeEntity

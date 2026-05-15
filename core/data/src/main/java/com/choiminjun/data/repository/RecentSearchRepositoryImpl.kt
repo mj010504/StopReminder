@@ -2,7 +2,7 @@ package com.choiminjun.data.repository
 
 import com.choiminjun.database.model.RecentNodeEntity
 import com.choiminjun.database.model.RecentRouteEntity
-import com.choiminjun.database.source.RecentSearchDataSource
+import com.choiminjun.database.source.recentsearch.RecentSearchDataSource
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode

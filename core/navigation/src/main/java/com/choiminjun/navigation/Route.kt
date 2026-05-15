@@ -12,10 +12,22 @@ sealed interface HomeGraph : Route {
     data object HomeRoute : HomeGraph
 
     @Serializable
-    data class BusRouteRoute(val routeId: String, val routeNo: String) : HomeGraph
+    data class BusRouteRoute(
+        val routeId: String,
+        val routeNo: String,
+        val routeType: String = "",
+        val startNodeName: String = "",
+        val endNodeName: String = "",
+        val cityCode: String = "BUSAN",
+    ) : HomeGraph
 
     @Serializable
-    data class BusNodeRoute(val nodeId: String, val nodeName: String, val nodeNo: String? = null) : HomeGraph
+    data class BusNodeRoute(
+        val nodeId: String,
+        val nodeName: String,
+        val nodeNo: String? = null,
+        val cityCode: String = "BUSAN",
+    ) : HomeGraph
 
     @Serializable
     data class AlarmSettingRoute(val routeId: String, val routeNo: String) : HomeGraph

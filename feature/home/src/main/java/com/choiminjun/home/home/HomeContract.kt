@@ -21,6 +21,8 @@ data class HomeState(
     val recentRouteSearches: List<RecentRouteSearch> = emptyList(),
     val recentNodeSearches: List<RecentNodeSearch> = emptyList(),
     val alarmInfo: AlarmInfo? = null,
+    val favoriteRoutes: List<BusRoute> = emptyList(),
+    val favoriteNodes: List<BusNode> = emptyList(),
 ) : UiState
 
 sealed interface HomeIntent : UiIntent {
@@ -35,10 +37,24 @@ sealed interface HomeIntent : UiIntent {
     data class DeleteRecentNodeSearch(val id: Long) : HomeIntent
     data object ClickAlarmBanner : HomeIntent
     data object CancelAlarm : HomeIntent
+    data class ClickFavoriteRoute(val busRoute: BusRoute) : HomeIntent
+    data class ClickFavoriteNode(val busNode: BusNode) : HomeIntent
 }
 
 sealed interface HomeSideEffect : UiSideEffect {
-    data class NavigateToBusRoute(val routeId: String, val routeNo: String) : HomeSideEffect
-    data class NavigateToBusNode(val nodeId: String, val nodeName: String, val nodeNo: String?) : HomeSideEffect
+    data class NavigateToBusRoute(
+        val routeId: String,
+        val routeNo: String,
+        val routeType: String,
+        val startNodeName: String,
+        val endNodeName: String,
+        val cityCode: String,
+    ) : HomeSideEffect
+    data class NavigateToBusNode(
+        val nodeId: String,
+        val nodeName: String,
+        val nodeNo: String?,
+        val cityCode: String,
+    ) : HomeSideEffect
     data object NavigateToAlarmRing : HomeSideEffect
 }

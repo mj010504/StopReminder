@@ -19,11 +19,11 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         homeGraph(
-            navigateToBusRoute = { routeId, routeNo ->
-                navController.navigate(HomeGraph.BusRouteRoute(routeId, routeNo))
+            navigateToBusRoute = { routeId, routeNo, routeType, startNodeName, endNodeName, cityCode ->
+                navController.navigate(HomeGraph.BusRouteRoute(routeId, routeNo, routeType, startNodeName, endNodeName, cityCode))
             },
-            navigateToBusNode = { nodeId, nodeName, nodeNo ->
-                navController.navigate(HomeGraph.BusNodeRoute(nodeId, nodeName, nodeNo))
+            navigateToBusNode = { nodeId, nodeName, nodeNo, cityCode ->
+                navController.navigate(HomeGraph.BusNodeRoute(nodeId, nodeName, nodeNo, cityCode))
             },
             navigateBack = { navController.popBackStack() },
             navigateToHome = {
