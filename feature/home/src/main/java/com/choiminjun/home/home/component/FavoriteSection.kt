@@ -45,14 +45,14 @@ internal fun FavoriteSection(
         if (favoriteRoutes.isNotEmpty() || favoriteNodes.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.favorite_section)) }
         }
-        items(favoriteRoutes, key = { it.routeId }) { route ->
+        items(favoriteRoutes, key = { "route_${it.routeId} " }) { route ->
             FavoriteRouteItem(
                 route = route,
                 onClick = { onRouteClick(route) },
             )
             HorizontalDivider(thickness = 1.dp, color = SRTheme.colors.coolNeutral95)
         }
-        items(favoriteNodes, key = { it.nodeId }) { node ->
+        items(favoriteNodes, key = { "node_${it.nodeId}" }) { node ->
             FavoriteNodeItem(
                 node = node,
                 onClick = { onNodeClick(node) },
