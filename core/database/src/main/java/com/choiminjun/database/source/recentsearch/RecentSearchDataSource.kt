@@ -1,4 +1,4 @@
-package com.choiminjun.database.source
+package com.choiminjun.database.source.recentsearch
 
 import com.choiminjun.database.model.RecentNodeEntity
 import com.choiminjun.database.model.RecentRouteEntity
