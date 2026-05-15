@@ -9,6 +9,7 @@ import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 import com.choiminjun.domain.repository.AlarmRepository
 import com.choiminjun.domain.repository.BusRepository
+import com.choiminjun.domain.repository.FavoriteRepository
 import com.choiminjun.domain.repository.RecentSearchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -20,6 +21,7 @@ class HomeViewModel @Inject constructor(
     private val busRepository: BusRepository,
     private val recentSearchRepository: RecentSearchRepository,
     private val alarmRepository: AlarmRepository,
+    private val favoriteRepository: FavoriteRepository,
 ) : BaseViewModel<HomeState, HomeIntent, HomeSideEffect>(initialState = HomeState()) {
 
     private var searchJob: Job? = null
@@ -27,12 +29,26 @@ class HomeViewModel @Inject constructor(
     init {
         loadRecentSearches()
         observeAlarm()
+        observeFavorites()
     }
 
     private fun observeAlarm() {
         viewModelScope.launch {
             alarmRepository.observeAlarm().collect { alarmInfo ->
                 reduce { copy(alarmInfo = alarmInfo.takeIf { it.routeId.isNotBlank() }) }
+            }
+        }
+    }
+
+    private fun observeFavorites() {
+        viewModelScope.launch {
+            favoriteRepository.getFavoriteRoutes().collect { routes ->
+                reduce { copy(favoriteRoutes = routes) }
+            }
+        }
+        viewModelScope.launch {
+            favoriteRepository.getFavoriteNodes().collect { nodes ->
+                reduce { copy(favoriteNodes = nodes) }
             }
         }
     }
@@ -50,17 +66,35 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.DeleteRecentNodeSearch -> deleteRecentNodeSearch(intent.id)
             HomeIntent.ClickAlarmBanner -> postSideEffect(HomeSideEffect.NavigateToAlarmRing)
             HomeIntent.CancelAlarm -> cancelAlarm()
+            is HomeIntent.ClickFavoriteRoute -> clickBusRoute(intent.busRoute)
+            is HomeIntent.ClickFavoriteNode -> clickBusNode(intent.busNode)
         }
     }
 
     private fun clickBusRoute(busRoute: BusRoute) {
         saveRecentRoute(busRoute)
-        postSideEffect(HomeSideEffect.NavigateToBusRoute(busRoute.routeId, busRoute.routeNo))
+        postSideEffect(
+            HomeSideEffect.NavigateToBusRoute(
+                busRoute.routeId,
+                busRoute.routeNo,
+                busRoute.routeType,
+                busRoute.startNodeName,
+                busRoute.endNodeName,
+                busRoute.cityCode.name,
+            ),
+        )
     }
 
     private fun clickBusNode(busNode: BusNode) {
         saveRecentNode(busNode)
-        postSideEffect(HomeSideEffect.NavigateToBusNode(busNode.nodeId, busNode.nodeName, busNode.nodeNo))
+        postSideEffect(
+            HomeSideEffect.NavigateToBusNode(
+                busNode.nodeId,
+                busNode.nodeName,
+                busNode.nodeNo,
+                busNode.cityCode.name,
+            ),
+        )
     }
 
     private fun selectTab(intent: HomeIntent.SelectTab) {

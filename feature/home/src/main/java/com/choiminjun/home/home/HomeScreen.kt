@@ -2,34 +2,24 @@ package com.choiminjun.home.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,28 +27,42 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.choiminjun.designsystem.component.SRIconButton
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
+import com.choiminjun.domain.model.alarm.AlarmInfo
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
-import com.choiminjun.home.R
 import com.choiminjun.home.home.component.BoardingBanner
+import com.choiminjun.home.home.component.FavoriteSection
 import com.choiminjun.home.home.component.SearchField
-import com.choiminjun.home.home.component.SearchResult
+import com.choiminjun.home.home.component.SearchSection
 import com.choiminjun.designsystem.R as DesignSystemR
 
 @Composable
 internal fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
-    navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
-    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    navigateToBusRoute:
+    (routeId: String, routeNo: String, routeType: String, startNodeName: String, endNodeName: String, cityCode: String) -> Unit,
+    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?, cityCode: String) -> Unit,
     navigateToAlarmRing: () -> Unit,
 ) {
     val state by viewModel.collectAsState()
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
-            is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.routeId, effect.routeNo)
-            is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(effect.nodeId, effect.nodeName, effect.nodeNo)
+            is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(
+                effect.routeId,
+                effect.routeNo,
+                effect.routeType,
+                effect.startNodeName,
+                effect.endNodeName,
+                effect.cityCode,
+            )
+            is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(
+                effect.nodeId,
+                effect.nodeName,
+                effect.nodeNo,
+                effect.cityCode,
+            )
             HomeSideEffect.NavigateToAlarmRing -> navigateToAlarmRing()
         }
     }
@@ -76,6 +80,8 @@ internal fun HomeRoute(
         onRecentNodeSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentNodeSearch(id)) },
         onAlarmBannerClick = { viewModel.onIntent(HomeIntent.ClickAlarmBanner) },
         onAlarmCancelClick = { viewModel.onIntent(HomeIntent.CancelAlarm) },
+        onFavoriteRouteClick = { busRoute -> viewModel.onIntent(HomeIntent.ClickFavoriteRoute(busRoute)) },
+        onFavoriteNodeClick = { busNode -> viewModel.onIntent(HomeIntent.ClickFavoriteNode(busNode)) },
     )
 }
 
@@ -94,6 +100,8 @@ private fun HomeScreen(
     onRecentNodeSearchDelete: (Long) -> Unit,
     onAlarmBannerClick: () -> Unit,
     onAlarmCancelClick: () -> Unit,
+    onFavoriteRouteClick: (BusRoute) -> Unit,
+    onFavoriteNodeClick: (BusNode) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val imeVisible = WindowInsets.isImeVisible
@@ -142,40 +150,21 @@ private fun HomeScreen(
         )
 
         if (state.isSearching) {
-            SearchTabRow(
+            SearchSection(
+                modifier = Modifier.weight(1f),
+                isLoading = state.isLoading,
+                searchQuery = state.searchQuery,
+                searchedRoutes = state.searchedRoutes,
+                searchedNodes = state.searchedNodes,
                 selectedTab = state.selectedTab,
+                recentRouteSearches = state.recentRouteSearches,
+                recentNodeSearches = state.recentNodeSearches,
+                onBusRouteClick = onBusRouteClick,
+                onBusNodeClick = onBusNodeClick,
                 onTabSelect = onTabSelect,
+                onRecentRouteSearchDelete = onRecentRouteSearchDelete,
+                onRecentNodeSearchDelete = onRecentNodeSearchDelete,
             )
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = SRTheme.colors.coolNeutral95,
-            )
-
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.imePadding(), color = SRTheme.colors.blue50)
-                }
-            } else {
-                SearchResult(
-                    modifier = Modifier.weight(1f),
-                    query = state.searchQuery,
-                    routes = state.searchedRoutes,
-                    nodes = state.searchedNodes,
-                    selectedTab = state.selectedTab,
-                    recentRouteSearches = state.recentRouteSearches,
-                    recentNodeSearches = state.recentNodeSearches,
-                    onBusRouteClick = onBusRouteClick,
-                    onBusNodeClick = onBusNodeClick,
-                    onRecentRouteSearchDelete = onRecentRouteSearchDelete,
-                    onRecentNodeSearchDelete = onRecentNodeSearchDelete,
-                )
-            }
         } else {
             state.alarmInfo?.let { alarmInfo ->
                 // FIXME: 현재는 배너 클릭 시 AlarmRingScreen으로 진입.
@@ -194,45 +183,13 @@ private fun HomeScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SearchTabRow(
-    selectedTab: SearchTab,
-    onTabSelect: (SearchTab) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val selectedColor = SRTheme.colors.textPrimary
-    Row(modifier = modifier.fillMaxWidth()) {
-        SearchTab.entries.forEach { tab ->
-            val isSelected = tab == selectedTab
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onTabSelect(tab) }
-                    .drawBehind {
-                        if (isSelected) {
-                            val strokeWidth = 2.dp.toPx()
-                            drawLine(
-                                color = selectedColor,
-                                start = Offset(0f, size.height),
-                                end = Offset(size.width, size.height),
-                                strokeWidth = strokeWidth,
-                            )
-                        }
-                    }
-                    .padding(vertical = Spacing.space12),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = when (tab) {
-                        SearchTab.BUS -> stringResource(R.string.search_tab_bus)
-                        SearchTab.STOP -> stringResource(R.string.search_tab_stop)
-                    },
-                    style = SRTheme.typography.bodyMM,
-                    color = if (isSelected) SRTheme.colors.textPrimary else SRTheme.colors.textSecondary,
+            if (state.favoriteRoutes.isNotEmpty() || state.favoriteNodes.isNotEmpty()) {
+                FavoriteSection(
+                    modifier = Modifier.weight(1f),
+                    favoriteRoutes = state.favoriteRoutes,
+                    favoriteNodes = state.favoriteNodes,
+                    onRouteClick = onFavoriteRouteClick,
+                    onNodeClick = onFavoriteNodeClick,
                 )
             }
         }
@@ -240,11 +197,24 @@ private fun SearchTabRow(
 }
 
 @Composable
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "홈 - 배너 + 즐겨찾기")
 private fun HomeScreenPreview() {
     SRTheme {
         HomeScreen(
-            state = HomeState(),
+            state = HomeState(
+                alarmInfo = AlarmInfo(
+                    routeNo = "51",
+                    destNodeName = "하단",
+                    stopsBeforeAlarm = 3,
+                ),
+                favoriteRoutes = listOf(
+                    BusRoute("R001", "51", "일반", "노포동", "하단", CityCode.BUSAN),
+                    BusRoute("R002", "179", "일반", "기장", "사상", CityCode.BUSAN),
+                ),
+                favoriteNodes = listOf(
+                    BusNode("N001", "부산대학교앞", latitude = null, longitude = null, cityCode = CityCode.BUSAN, nodeNo = "12345"),
+                ),
+            ),
             onBackClick = {},
             onQueryChange = {},
             onSearchFocused = {},
@@ -256,6 +226,8 @@ private fun HomeScreenPreview() {
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
             onAlarmCancelClick = {},
+            onFavoriteRouteClick = {},
+            onFavoriteNodeClick = {},
         )
     }
 }
@@ -279,6 +251,8 @@ private fun HomeScreenPrevSearchPreview() {
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
             onAlarmCancelClick = {},
+            onFavoriteRouteClick = {},
+            onFavoriteNodeClick = {},
         )
     }
 }
@@ -322,6 +296,8 @@ private fun HomeScreenSearchBusTabPreview() {
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
             onAlarmCancelClick = {},
+            onFavoriteRouteClick = {},
+            onFavoriteNodeClick = {},
         )
     }
 }
@@ -363,6 +339,8 @@ private fun HomeScreenSearchStopTabPreview() {
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
             onAlarmCancelClick = {},
+            onFavoriteRouteClick = {},
+            onFavoriteNodeClick = {},
         )
     }
 }

@@ -18,8 +18,9 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.homeGraph(
-    navigateToBusRoute: (routeId: String, routeNo: String) -> Unit,
-    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?) -> Unit,
+    navigateToBusRoute:
+    (routeId: String, routeNo: String, routeType: String, startNodeName: String, endNodeName: String, cityCode: String) -> Unit,
+    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?, cityCode: String) -> Unit,
     navigateBack: () -> Unit,
     navigateToHome: () -> Unit,
     navigateToAlarmSetting: (routeId: String, routeNo: String) -> Unit,
