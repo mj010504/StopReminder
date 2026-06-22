@@ -83,8 +83,10 @@ class LocationRepositoryImpl @Inject constructor(
                 val nearestNode = windowNodes[0]
                 val remaining = windowNodes.size - 1
                 val distance = calculateDistance(
-                    coord.latitude, coord.longitude,
-                    nearestNode.latitude!!, nearestNode.longitude!!,
+                    coord.latitude,
+                    coord.longitude,
+                    nearestNode.latitude!!,
+                    nearestNode.longitude!!,
                 )
 
                 Timber.d("최근접 정류장: [${nearestNode.nodeName}] remaining=$remaining, distance=${distance.toInt()}m")

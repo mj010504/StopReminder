@@ -13,7 +13,6 @@ import com.choiminjun.domain.model.alarm.AlarmInfo
 import com.choiminjun.domain.repository.AlarmRepository
 import com.choiminjun.domain.usecase.ObserveNearestNodeUseCase
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import com.choiminjun.alarm.R as AlarmR
