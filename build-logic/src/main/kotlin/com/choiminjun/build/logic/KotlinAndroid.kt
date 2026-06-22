@@ -41,6 +41,7 @@ internal fun Project.configureKotlinAndroid() {
     val libs = extensions.libs
     dependencies {
         "detektPlugins"(libs.findLibrary("detekt.formatting").get())
+        "implementation"(libs.findLibrary("timber").get())
     }
 
     configureKotlin()

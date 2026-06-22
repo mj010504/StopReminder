@@ -13,4 +13,5 @@ dependencies {
     implementation(projects.core.network)
     implementation(projects.core.database)
     implementation(projects.core.datastore)
+    implementation(libs.play.services.location)
 }
