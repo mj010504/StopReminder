@@ -36,25 +36,13 @@ sealed interface HomeIntent : UiIntent {
     data class DeleteRecentRouteSearch(val id: Long) : HomeIntent
     data class DeleteRecentNodeSearch(val id: Long) : HomeIntent
     data object ClickAlarmBanner : HomeIntent
-    data object CancelAlarm : HomeIntent
     data class ClickFavoriteRoute(val busRoute: BusRoute) : HomeIntent
     data class ClickFavoriteNode(val busNode: BusNode) : HomeIntent
 }
 
 sealed interface HomeSideEffect : UiSideEffect {
-    data class NavigateToBusRoute(
-        val routeId: String,
-        val routeNo: String,
-        val routeType: String,
-        val startNodeName: String,
-        val endNodeName: String,
-        val cityCode: String,
-    ) : HomeSideEffect
-    data class NavigateToBusNode(
-        val nodeId: String,
-        val nodeName: String,
-        val nodeNo: String?,
-        val cityCode: String,
-    ) : HomeSideEffect
+    data class NavigateToBusRoute(val busRoute: BusRoute) : HomeSideEffect
+    data class NavigateToBusNode(val busNode: BusNode) : HomeSideEffect
+    data object NavigateToAlarmMonitor : HomeSideEffect
     data object NavigateToAlarmRing : HomeSideEffect
 }

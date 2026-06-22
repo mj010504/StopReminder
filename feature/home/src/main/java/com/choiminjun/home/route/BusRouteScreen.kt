@@ -1,6 +1,5 @@
 package com.choiminjun.home.route
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +46,7 @@ import com.choiminjun.designsystem.component.SRSnackbar
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
 import com.choiminjun.domain.model.bus.BusNode
+import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -59,7 +59,7 @@ private val StopIconAreaWidth: Dp = Spacing.space20 + StopIconSize + Spacing.spa
 @Composable
 internal fun BusRouteRoute(
     onBackClick: () -> Unit,
-    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?, cityCode: String) -> Unit,
+    navigateToBusNode: (BusNode) -> Unit,
     navigateToHome: () -> Unit,
     viewModel: BusRouteViewModel = hiltViewModel(),
 ) {
@@ -73,12 +73,7 @@ internal fun BusRouteRoute(
     viewModel.collectSideEffect { effect ->
         when (effect) {
             BusRouteSideEffect.NavigateBack -> onBackClick()
-            is BusRouteSideEffect.NavigateToBusNode -> navigateToBusNode(
-                effect.nodeId,
-                effect.nodeName,
-                effect.nodeNo,
-                effect.cityCode,
-            )
+            is BusRouteSideEffect.NavigateToBusNode -> navigateToBusNode(effect.busNode)
 
             is BusRouteSideEffect.ShowSnackbar -> {
                 snackbarJob?.cancel()
@@ -130,7 +125,7 @@ private fun BusRouteScreen(
                     onClick = { onBackClick() },
                 )
                 Text(
-                    text = state.routeNo,
+                    text = state.busRoute?.routeNo ?: "",
                     style = SRTheme.typography.bodyXMM,
                     color = SRTheme.colors.blue50,
                     modifier = Modifier.weight(1f),
@@ -179,8 +174,6 @@ private fun BusRouteScreen(
                 state = listState,
             ) {
                 item {
-                    val firstNode = state.nodes.firstOrNull()
-                    val lastNode = state.nodes.lastOrNull()
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -189,7 +182,7 @@ private fun BusRouteScreen(
                         verticalArrangement = Arrangement.spacedBy(Spacing.space8),
                     ) {
                         Text(
-                            text = firstNode?.cityCode?.label ?: "",
+                            text = state.busRoute?.cityCode?.label ?: "",
                             style = SRTheme.typography.bodyXMM,
                             color = SRTheme.colors.textSecondary,
                         )
@@ -198,18 +191,18 @@ private fun BusRouteScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.space4),
                         ) {
                             Text(
-                                text = firstNode?.nodeName ?: "",
+                                text = state.busRoute?.startNodeName ?: "",
                                 style = SRTheme.typography.bodyMM,
                                 color = SRTheme.colors.textPrimary,
                             )
                             Icon(
                                 imageVector = ImageVector.vectorResource(R.drawable.ic_horizontal_arrow),
                                 contentDescription = null,
-                                modifier = Modifier.size(Spacing.space16),
+                                modifier = Modifier.size(16.dp),
                                 tint = SRTheme.colors.textPrimary,
                             )
                             Text(
-                                text = lastNode?.nodeName ?: "",
+                                text = state.busRoute?.endNodeName ?: "",
                                 style = SRTheme.typography.bodyMM,
                                 color = SRTheme.colors.textPrimary,
                             )
@@ -331,7 +324,10 @@ private fun BusRouteScreenPreview() {
     )
     SRTheme {
         BusRouteScreen(
-            state = BusRouteState(routeNo = "51", nodes = nodes),
+            state = BusRouteState(
+                busRoute = BusRoute("R001", "51", "일반", "노포동", "하단", CityCode.BUSAN),
+                nodes = nodes,
+            ),
             snackbarHostState = remember { SnackbarHostState() },
             onBackClick = {},
             onNodeClick = { },

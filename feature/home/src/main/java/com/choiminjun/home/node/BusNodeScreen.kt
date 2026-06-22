@@ -1,6 +1,5 @@
 package com.choiminjun.home.node
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,12 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -39,6 +40,7 @@ import com.choiminjun.designsystem.component.SRIconButton
 import com.choiminjun.designsystem.component.SRSnackbar
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
+import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
 import kotlinx.coroutines.Job
@@ -48,9 +50,8 @@ import com.choiminjun.home.R as HR
 @Composable
 internal fun BusNodeRoute(
     onBackClick: () -> Unit,
-    onAlarmClick: (routeId: String, routeNo: String) -> Unit,
-    navigateToBusRoute:
-    (routeId: String, routeNo: String, routeType: String, startNodeName: String, endNodeName: String, cityCode: String) -> Unit,
+    onAlarmClick: (routeId: String, routeNo: String, boardingNodeId: String, boardingNodeName: String) -> Unit,
+    navigateToBusRoute: (BusRoute) -> Unit,
     navigateToHome: () -> Unit,
     viewModel: BusNodeViewModel = hiltViewModel(),
 ) {
@@ -64,15 +65,13 @@ internal fun BusNodeRoute(
     viewModel.collectSideEffect { effect ->
         when (effect) {
             BusNodeSideEffect.NavigateBack -> onBackClick()
-            is BusNodeSideEffect.NavigateToAlarm -> onAlarmClick(effect.routeId, effect.routeNo)
-            is BusNodeSideEffect.NavigateToBusRoute -> navigateToBusRoute(
+            is BusNodeSideEffect.NavigateToAlarm -> onAlarmClick(
                 effect.routeId,
                 effect.routeNo,
-                effect.routeType,
-                effect.startNodeName,
-                effect.endNodeName,
-                effect.cityCode,
+                effect.boardingNodeId,
+                effect.boardingNodeName,
             )
+            is BusNodeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.busRoute)
 
             is BusNodeSideEffect.ShowSnackbar -> {
                 snackbarJob?.cancel()
@@ -90,7 +89,7 @@ internal fun BusNodeRoute(
         state = state,
         snackbarHostState = snackbarHostState,
         onBackClick = { viewModel.onIntent(BusNodeIntent.ClickBack) },
-        onAlarmClick = { routeId, routeNo -> viewModel.onIntent(BusNodeIntent.ClickAlarm(routeId, routeNo)) },
+        onAlarmClick = { route -> viewModel.onIntent(BusNodeIntent.ClickAlarm(route)) },
         onRouteClick = { route -> viewModel.onIntent(BusNodeIntent.ClickBusRoute(route)) },
         onHomeClick = navigateToHome,
         onFavoriteClick = { viewModel.onIntent(BusNodeIntent.ToggleFavorite) },
@@ -102,7 +101,7 @@ private fun BusNodeScreen(
     state: BusNodeState,
     snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit,
-    onAlarmClick: (routeId: String, routeNo: String) -> Unit,
+    onAlarmClick: (BusRoute) -> Unit,
     onRouteClick: (BusRoute) -> Unit,
     onHomeClick: () -> Unit,
     onFavoriteClick: () -> Unit,
@@ -126,7 +125,7 @@ private fun BusNodeScreen(
                     onClick = { onBackClick() },
                 )
                 Text(
-                    text = state.nodeName,
+                    text = state.busNode?.nodeName ?: "",
                     style = SRTheme.typography.bodyXMM,
                     color = SRTheme.colors.textPrimary,
                     modifier = Modifier.weight(1f),
@@ -172,7 +171,7 @@ private fun BusNodeScreen(
                 state = listState,
             ) {
                 item {
-                    state.nodeNo?.let { nodeNo ->
+                    state.busNode?.nodeNo?.let { nodeNo ->
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -192,7 +191,7 @@ private fun BusNodeScreen(
                 items(state.routes, key = { it.routeId }) { route ->
                     BusNodeRouteItem(
                         route = route,
-                        onAlarmClick = { onAlarmClick(route.routeId, route.routeNo) },
+                        onAlarmClick = { onAlarmClick(route) },
                         onRouteClick = { onRouteClick(route) },
                     )
                 }
@@ -225,11 +224,27 @@ private fun BusNodeRouteItem(
                 style = SRTheme.typography.bodyMM,
                 color = SRTheme.colors.blue50,
             )
-            Text(
-                text = "${route.startNodeName} → ${route.endNodeName}",
-                style = SRTheme.typography.bodySR,
-                color = SRTheme.colors.textSecondary,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.space4),
+            ) {
+                Text(
+                    text = route.startNodeName,
+                    style = SRTheme.typography.bodySR,
+                    color = SRTheme.colors.textSecondary,
+                )
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_horizontal_arrow),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = SRTheme.colors.textSecondary,
+                )
+                Text(
+                    text = route.endNodeName,
+                    style = SRTheme.typography.bodySR,
+                    color = SRTheme.colors.textSecondary,
+                )
+            }
         }
         SRIconButton(
             imageVector = ImageVector.vectorResource(R.drawable.ic_bell),
@@ -250,8 +265,7 @@ private fun BusNodeScreenPreview() {
     SRTheme {
         BusNodeScreen(
             state = BusNodeState(
-                nodeName = "부산대학교앞",
-                nodeNo = "12345",
+                busNode = BusNode("N000", "부산대학교앞", nodeNo = "12345", cityCode = CityCode.BUSAN),
                 routes = listOf(
                     BusRoute("R001", "51", "일반", "노포동", "하단", CityCode.BUSAN),
                     BusRoute("R002", "179", "일반", "기장", "사상", CityCode.BUSAN),
@@ -260,7 +274,7 @@ private fun BusNodeScreenPreview() {
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onBackClick = {},
-            onAlarmClick = { _, _ -> },
+            onAlarmClick = { },
             onRouteClick = { },
             onHomeClick = {},
             onFavoriteClick = {},

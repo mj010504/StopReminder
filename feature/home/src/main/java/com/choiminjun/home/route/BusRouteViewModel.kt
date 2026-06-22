@@ -8,9 +8,9 @@ import com.choiminjun.common.util.suspendRunCatching
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.domain.model.bus.CityCode
-import com.choiminjun.domain.repository.BusRepository
 import com.choiminjun.domain.repository.FavoriteRepository
 import com.choiminjun.domain.repository.RecentSearchRepository
+import com.choiminjun.domain.usecase.GetNodesByRouteUseCase
 import com.choiminjun.navigation.HomeGraph
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class BusRouteViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val busRepository: BusRepository,
+    private val getNodesByRoute: GetNodesByRouteUseCase,
     private val recentSearchRepository: RecentSearchRepository,
     private val favoriteRepository: FavoriteRepository,
 ) : BaseViewModel<BusRouteState, BusRouteIntent, BusRouteSideEffect>(
@@ -38,12 +38,14 @@ class BusRouteViewModel @Inject constructor(
     private fun initRoute(route: HomeGraph.BusRouteRoute) {
         reduce {
             copy(
-                routeId = route.routeId,
-                routeNo = route.routeNo,
-                routeType = route.routeType,
-                startNodeName = route.startNodeName,
-                endNodeName = route.endNodeName,
-                cityCode = route.cityCode,
+                busRoute = BusRoute(
+                    routeId = route.routeId,
+                    routeNo = route.routeNo,
+                    routeType = route.routeType,
+                    startNodeName = route.startNodeName,
+                    endNodeName = route.endNodeName,
+                    cityCode = CityCode.valueOf(route.cityCode),
+                ),
             )
         }
     }
@@ -58,14 +60,7 @@ class BusRouteViewModel @Inject constructor(
 
     private fun clickBusNode(busNode: BusNode) {
         saveRecentNode(busNode)
-        postSideEffect(
-            BusRouteSideEffect.NavigateToBusNode(
-                busNode.nodeId,
-                busNode.nodeName,
-                busNode.nodeNo,
-                busNode.cityCode.name,
-            ),
-        )
+        postSideEffect(BusRouteSideEffect.NavigateToBusNode(busNode))
     }
 
     private fun saveRecentNode(busNode: BusNode) = viewModelScope.launch {
@@ -85,18 +80,10 @@ class BusRouteViewModel @Inject constructor(
     private fun toggleFavorite() {
         toggleFavoriteJob?.cancel()
         toggleFavoriteJob = viewModelScope.launch {
+            val currentRoute = state.value.busRoute ?: return@launch
             val willAdd = !state.value.isFavorite
             suspendRunCatching {
-                favoriteRepository.toggleFavoriteRoute(
-                    BusRoute(
-                        routeId = state.value.routeId,
-                        routeNo = state.value.routeNo,
-                        routeType = state.value.routeType,
-                        startNodeName = state.value.startNodeName,
-                        endNodeName = state.value.endNodeName,
-                        cityCode = CityCode.valueOf(state.value.cityCode),
-                    ),
-                )
+                favoriteRepository.toggleFavoriteRoute(currentRoute)
             }.onSuccess {
                 postSideEffect(BusRouteSideEffect.ShowSnackbar(added = willAdd))
             }
@@ -106,7 +93,7 @@ class BusRouteViewModel @Inject constructor(
     private fun loadNodes(routeId: String) {
         viewModelScope.launch {
             reduce { copy(isLoading = true) }
-            val nodes = suspendRunCatching { busRepository.getNodesByRoute(CityCode.BUSAN, routeId) }
+            val nodes = suspendRunCatching { getNodesByRoute(routeId) }
                 .getOrElse { emptyList() }
             reduce { copy(isLoading = false, nodes = nodes) }
         }
