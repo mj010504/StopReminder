@@ -1,4 +1,4 @@
-package com.choiminjun.home.service
+package com.choiminjun.stopreminder.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,17 +9,24 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.content.ContextCompat
+import com.choiminjun.domain.model.alarm.AlarmInfo
 import com.choiminjun.domain.repository.AlarmRepository
-import com.choiminjun.home.R
+import com.choiminjun.domain.usecase.ObserveNearestNodeUseCase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import com.choiminjun.alarm.R as AlarmR
 
 @AndroidEntryPoint
 class AlarmForegroundService : Service() {
@@ -27,8 +34,12 @@ class AlarmForegroundService : Service() {
     @Inject
     lateinit var alarmRepository: AlarmRepository
 
+    @Inject
+    lateinit var observeNearestNode: ObserveNearestNodeUseCase
+
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var observeJob: Job? = null
+    private var locationJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -44,6 +55,10 @@ class AlarmForegroundService : Service() {
         if (routeNo != null && nodeName != null) {
             startForeground(NOTIFICATION_ID, buildNotification(routeNo, nodeName))
             observeAlarmState()
+            scope.launch {
+                val alarm = alarmRepository.observeAlarm().first()
+                if (alarm.routeId.isNotBlank()) startLocationTracking(alarm)
+            }
         } else {
             scope.launch {
                 val alarm = alarmRepository.observeAlarm().first()
@@ -52,6 +67,7 @@ class AlarmForegroundService : Service() {
                 } else {
                     startForeground(NOTIFICATION_ID, buildNotification(alarm.routeNo, alarm.destNodeName))
                     observeAlarmState()
+                    startLocationTracking(alarm)
                 }
             }
         }
@@ -63,7 +79,32 @@ class AlarmForegroundService : Service() {
         observeJob?.cancel()
         observeJob = scope.launch {
             alarmRepository.observeAlarm().collect { alarm ->
-                if (alarm.routeId.isBlank()) stopSelf()
+                if (alarm.routeId.isBlank()) {
+                    stopSelf()
+                }
+            }
+        }
+    }
+
+    private fun startLocationTracking(alarmInfo: AlarmInfo) {
+        locationJob?.cancel()
+        locationJob = scope.launch {
+            while (isActive) {
+                try {
+                    observeNearestNode(alarmInfo.routeId, alarmInfo.boardingNodeId, alarmInfo.destNodeId)
+                        .collect { result ->
+                            alarmRepository.updateNearestNode(result)
+                            if (result.remaining in 0..alarmInfo.stopsBeforeAlarm) {
+                                alarmRepository.triggerAlarm()
+                                stopSelf()
+                            }
+                        }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "위치 추적 오류, 5초 후 재시도")
+                    delay(5.seconds)
+                }
             }
         }
     }
@@ -72,6 +113,7 @@ class AlarmForegroundService : Service() {
         val tapIntent = packageManager.getLaunchIntentForPackage(packageName)
             ?.apply { flags = Intent.FLAG_ACTIVITY_SINGLE_TOP }
             ?: Intent()
+
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
@@ -80,8 +122,8 @@ class AlarmForegroundService : Service() {
         )
 
         return Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(R.string.alarm_notification_title))
-            .setContentText(getString(R.string.alarm_notification_text, routeNo, nodeName))
+            .setContentTitle(getString(AlarmR.string.alarm_notification_title))
+            .setContentText(getString(AlarmR.string.alarm_notification_text, routeNo, nodeName))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -91,7 +133,7 @@ class AlarmForegroundService : Service() {
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            getString(R.string.alarm_notification_channel_name),
+            getString(AlarmR.string.alarm_notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH,
         )
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -100,6 +142,7 @@ class AlarmForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        locationJob?.cancel()
         scope.cancel()
     }
 
@@ -111,7 +154,7 @@ class AlarmForegroundService : Service() {
     }
 }
 
-internal fun startAlarmService(context: Context, routeNo: String, nodeName: String) {
+fun startAlarmService(context: Context, routeNo: String, nodeName: String) {
     val intent = Intent(context, AlarmForegroundService::class.java).apply {
         putExtra(AlarmForegroundService.EXTRA_ROUTE_NO, routeNo)
         putExtra(AlarmForegroundService.EXTRA_NODE_NAME, nodeName)
@@ -119,6 +162,6 @@ internal fun startAlarmService(context: Context, routeNo: String, nodeName: Stri
     ContextCompat.startForegroundService(context, intent)
 }
 
-internal fun stopAlarmService(context: Context) {
+fun stopAlarmService(context: Context) {
     context.stopService(Intent(context, AlarmForegroundService::class.java))
 }

@@ -1,6 +1,5 @@
 package com.choiminjun.home.home
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.choiminjun.base.BaseViewModel
 import com.choiminjun.common.util.suspendRunCatching
@@ -35,6 +34,11 @@ class HomeViewModel @Inject constructor(
     private fun observeAlarm() {
         viewModelScope.launch {
             alarmRepository.observeAlarm().collect { alarmInfo ->
+                if (alarmInfo.isTriggered) {
+                    postSideEffect(HomeSideEffect.NavigateToAlarmRing)
+                    return@collect
+                }
+
                 reduce { copy(alarmInfo = alarmInfo.takeIf { it.routeId.isNotBlank() }) }
             }
         }
@@ -46,6 +50,7 @@ class HomeViewModel @Inject constructor(
                 reduce { copy(favoriteRoutes = routes) }
             }
         }
+
         viewModelScope.launch {
             favoriteRepository.getFavoriteNodes().collect { nodes ->
                 reduce { copy(favoriteNodes = nodes) }
@@ -64,8 +69,7 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.SelectTab -> selectTab(intent)
             is HomeIntent.DeleteRecentRouteSearch -> deleteRecentRouteSearch(intent.id)
             is HomeIntent.DeleteRecentNodeSearch -> deleteRecentNodeSearch(intent.id)
-            HomeIntent.ClickAlarmBanner -> postSideEffect(HomeSideEffect.NavigateToAlarmRing)
-            HomeIntent.CancelAlarm -> cancelAlarm()
+            HomeIntent.ClickAlarmBanner -> postSideEffect(HomeSideEffect.NavigateToAlarmMonitor)
             is HomeIntent.ClickFavoriteRoute -> clickBusRoute(intent.busRoute)
             is HomeIntent.ClickFavoriteNode -> clickBusNode(intent.busNode)
         }
@@ -73,28 +77,12 @@ class HomeViewModel @Inject constructor(
 
     private fun clickBusRoute(busRoute: BusRoute) {
         saveRecentRoute(busRoute)
-        postSideEffect(
-            HomeSideEffect.NavigateToBusRoute(
-                busRoute.routeId,
-                busRoute.routeNo,
-                busRoute.routeType,
-                busRoute.startNodeName,
-                busRoute.endNodeName,
-                busRoute.cityCode.name,
-            ),
-        )
+        postSideEffect(HomeSideEffect.NavigateToBusRoute(busRoute))
     }
 
     private fun clickBusNode(busNode: BusNode) {
         saveRecentNode(busNode)
-        postSideEffect(
-            HomeSideEffect.NavigateToBusNode(
-                busNode.nodeId,
-                busNode.nodeName,
-                busNode.nodeNo,
-                busNode.cityCode.name,
-            ),
-        )
+        postSideEffect(HomeSideEffect.NavigateToBusNode(busNode))
     }
 
     private fun selectTab(intent: HomeIntent.SelectTab) {
@@ -154,13 +142,11 @@ class HomeViewModel @Inject constructor(
 
             val routesJob = launch {
                 val result = suspendRunCatching { busRepository.getRouteNumbers(CityCode.BUSAN, query) }
-                if (result.isFailure) Log.e("SearchError", "노선 실패: ${result.exceptionOrNull()?.message}")
                 reduce { copy(searchedRoutes = result.getOrElse { emptyList() }) }
             }
 
             val nodesJob = launch {
                 val result = suspendRunCatching { busRepository.getNodeNumbers(CityCode.BUSAN, query) }
-                if (result.isFailure) Log.e("SearchError", "정류장 실패: ${result.exceptionOrNull()?.message}")
                 reduce { copy(searchedNodes = result.getOrElse { emptyList() }) }
             }
 
@@ -191,10 +177,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             suspendRunCatching { recentSearchRepository.deleteNode(id) }
         }
-
-    private fun cancelAlarm() = viewModelScope.launch {
-        suspendRunCatching { alarmRepository.clearAlarm() }
-    }
 
     private fun loadRecentSearches() {
         viewModelScope.launch {

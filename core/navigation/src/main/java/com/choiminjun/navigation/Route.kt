@@ -30,7 +30,15 @@ sealed interface HomeGraph : Route {
     ) : HomeGraph
 
     @Serializable
-    data class AlarmSettingRoute(val routeId: String, val routeNo: String) : HomeGraph
+    data class AlarmSettingRoute(
+        val routeId: String,
+        val routeNo: String,
+        val boardingNodeId: String = "",
+        val boardingNodeName: String = "",
+    ) : HomeGraph
+
+    @Serializable
+    data object AlarmMonitorRoute : HomeGraph
 
     @Serializable
     data object AlarmRingRoute : HomeGraph

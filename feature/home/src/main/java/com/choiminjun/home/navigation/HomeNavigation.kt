@@ -5,8 +5,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.choiminjun.home.alarmring.AlarmRingRoute
-import com.choiminjun.home.alarmsetting.AlarmSettingRoute
+import com.choiminjun.domain.model.bus.BusNode
+import com.choiminjun.domain.model.bus.BusRoute
 import com.choiminjun.home.home.HomeRoute
 import com.choiminjun.home.node.BusNodeRoute
 import com.choiminjun.home.route.BusRouteRoute
@@ -18,12 +18,13 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.homeGraph(
-    navigateToBusRoute:
-    (routeId: String, routeNo: String, routeType: String, startNodeName: String, endNodeName: String, cityCode: String) -> Unit,
-    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?, cityCode: String) -> Unit,
+    navigateToBusRoute: (BusRoute) -> Unit,
+    navigateToBusNode: (BusNode) -> Unit,
     navigateBack: () -> Unit,
     navigateToHome: () -> Unit,
-    navigateToAlarmSetting: (routeId: String, routeNo: String) -> Unit,
+    navigateToAlarmSetting:
+    (routeId: String, routeNo: String, boardingNodeId: String, boardingNodeName: String) -> Unit,
+    navigateToAlarmMonitor: () -> Unit,
     navigateToAlarmRing: () -> Unit,
 ) {
     navigation<HomeBaseRoute>(startDestination = HomeGraph.HomeRoute) {
@@ -31,6 +32,7 @@ fun NavGraphBuilder.homeGraph(
             HomeRoute(
                 navigateToBusRoute = navigateToBusRoute,
                 navigateToBusNode = navigateToBusNode,
+                navigateToAlarmMonitor = navigateToAlarmMonitor,
                 navigateToAlarmRing = navigateToAlarmRing,
             )
         }
@@ -44,20 +46,11 @@ fun NavGraphBuilder.homeGraph(
         composable<HomeGraph.BusNodeRoute> {
             BusNodeRoute(
                 onBackClick = navigateBack,
-                onAlarmClick = navigateToAlarmSetting,
+                onAlarmClick = { routeId, routeNo, boardingNodeId, boardingNodeName ->
+                    navigateToAlarmSetting(routeId, routeNo, boardingNodeId, boardingNodeName)
+                },
                 navigateToBusRoute = navigateToBusRoute,
                 navigateToHome = navigateToHome,
-            )
-        }
-        composable<HomeGraph.AlarmSettingRoute> {
-            AlarmSettingRoute(
-                onBackClick = navigateBack,
-                onAlarmSet = { _, _ -> navigateToHome() },
-            )
-        }
-        composable<HomeGraph.AlarmRingRoute> {
-            AlarmRingRoute(
-                onDismiss = navigateToHome,
             )
         }
     }

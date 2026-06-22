@@ -5,5 +5,8 @@ data class AlarmInfo(
     val routeNo: String = "",
     val destNodeId: String = "",
     val destNodeName: String = "",
+    val boardingNodeId: String = "",
+    val boardingNodeName: String = "",
     val stopsBeforeAlarm: Int = 1,
+    val isTriggered: Boolean = false,
 )

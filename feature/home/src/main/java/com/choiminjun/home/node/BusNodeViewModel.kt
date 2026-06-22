@@ -38,10 +38,12 @@ class BusNodeViewModel @Inject constructor(
     private fun initNode(node: HomeGraph.BusNodeRoute) {
         reduce {
             copy(
-                nodeId = node.nodeId,
-                nodeName = node.nodeName,
-                nodeNo = node.nodeNo,
-                cityCode = node.cityCode,
+                busNode = BusNode(
+                    nodeId = node.nodeId,
+                    nodeName = node.nodeName,
+                    nodeNo = node.nodeNo,
+                    cityCode = CityCode.valueOf(node.cityCode),
+                ),
             )
         }
     }
@@ -49,24 +51,27 @@ class BusNodeViewModel @Inject constructor(
     override suspend fun handleIntent(intent: BusNodeIntent) {
         when (intent) {
             BusNodeIntent.ClickBack -> postSideEffect(BusNodeSideEffect.NavigateBack)
-            is BusNodeIntent.ClickAlarm -> postSideEffect(BusNodeSideEffect.NavigateToAlarm(intent.routeId, intent.routeNo))
+            is BusNodeIntent.ClickAlarm -> clickAlarm(intent.route)
             is BusNodeIntent.ClickBusRoute -> clickBusRoute(intent.route)
             BusNodeIntent.ToggleFavorite -> toggleFavorite()
         }
     }
 
-    private fun clickBusRoute(busRoute: BusRoute) {
-        saveRecentRoute(busRoute)
+    private fun clickAlarm(route: BusRoute) {
+        val node = state.value.busNode ?: return
         postSideEffect(
-            BusNodeSideEffect.NavigateToBusRoute(
-                busRoute.routeId,
-                busRoute.routeNo,
-                busRoute.routeType,
-                busRoute.startNodeName,
-                busRoute.endNodeName,
-                busRoute.cityCode.name,
+            BusNodeSideEffect.NavigateToAlarm(
+                routeId = route.routeId,
+                routeNo = route.routeNo,
+                boardingNodeId = node.nodeId,
+                boardingNodeName = node.nodeName,
             ),
         )
+    }
+
+    private fun clickBusRoute(busRoute: BusRoute) {
+        saveRecentRoute(busRoute)
+        postSideEffect(BusNodeSideEffect.NavigateToBusRoute(busRoute))
     }
 
     private fun saveRecentRoute(busRoute: BusRoute) = viewModelScope.launch {
@@ -95,16 +100,10 @@ class BusNodeViewModel @Inject constructor(
     private fun toggleFavorite() {
         toggleFavoriteJob?.cancel()
         toggleFavoriteJob = viewModelScope.launch {
+            val currentNode = state.value.busNode ?: return@launch
             val willAdd = !state.value.isFavorite
             suspendRunCatching {
-                favoriteRepository.toggleFavoriteNode(
-                    BusNode(
-                        nodeId = state.value.nodeId,
-                        nodeName = state.value.nodeName,
-                        nodeNo = state.value.nodeNo,
-                        cityCode = CityCode.valueOf(state.value.cityCode),
-                    ),
-                )
+                favoriteRepository.toggleFavoriteNode(currentNode)
             }.onSuccess {
                 postSideEffect(BusNodeSideEffect.ShowSnackbar(added = willAdd))
             }

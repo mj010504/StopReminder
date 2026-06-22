@@ -1,10 +1,11 @@
-package com.choiminjun.home.alarmring
+package com.choiminjun.alarm.alarmring
 
 import androidx.lifecycle.viewModelScope
 import com.choiminjun.base.BaseViewModel
 import com.choiminjun.common.util.suspendRunCatching
 import com.choiminjun.domain.repository.AlarmRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,9 +27,8 @@ class AlarmRingViewModel @Inject constructor(
 
     private fun observeAlarm() {
         viewModelScope.launch {
-            alarmRepository.observeAlarm().collect { alarmInfo ->
-                reduce { copy(alarmInfo = alarmInfo) }
-            }
+            val alarmInfo = alarmRepository.observeAlarm().first()
+            reduce { copy(alarmInfo = alarmInfo) }
         }
     }
 

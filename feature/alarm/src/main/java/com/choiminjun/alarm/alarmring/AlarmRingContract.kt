@@ -1,4 +1,4 @@
-package com.choiminjun.home.alarmring
+package com.choiminjun.alarm.alarmring
 
 import com.choiminjun.base.UiIntent
 import com.choiminjun.base.UiSideEffect

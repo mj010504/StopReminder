@@ -40,29 +40,18 @@ import com.choiminjun.designsystem.R as DesignSystemR
 @Composable
 internal fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
-    navigateToBusRoute:
-    (routeId: String, routeNo: String, routeType: String, startNodeName: String, endNodeName: String, cityCode: String) -> Unit,
-    navigateToBusNode: (nodeId: String, nodeName: String, nodeNo: String?, cityCode: String) -> Unit,
+    navigateToBusRoute: (BusRoute) -> Unit,
+    navigateToBusNode: (BusNode) -> Unit,
+    navigateToAlarmMonitor: () -> Unit,
     navigateToAlarmRing: () -> Unit,
 ) {
     val state by viewModel.collectAsState()
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
-            is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(
-                effect.routeId,
-                effect.routeNo,
-                effect.routeType,
-                effect.startNodeName,
-                effect.endNodeName,
-                effect.cityCode,
-            )
-            is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(
-                effect.nodeId,
-                effect.nodeName,
-                effect.nodeNo,
-                effect.cityCode,
-            )
+            is HomeSideEffect.NavigateToBusRoute -> navigateToBusRoute(effect.busRoute)
+            is HomeSideEffect.NavigateToBusNode -> navigateToBusNode(effect.busNode)
+            HomeSideEffect.NavigateToAlarmMonitor -> navigateToAlarmMonitor()
             HomeSideEffect.NavigateToAlarmRing -> navigateToAlarmRing()
         }
     }
@@ -79,7 +68,6 @@ internal fun HomeRoute(
         onRecentRouteSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentRouteSearch(id)) },
         onRecentNodeSearchDelete = { id -> viewModel.onIntent(HomeIntent.DeleteRecentNodeSearch(id)) },
         onAlarmBannerClick = { viewModel.onIntent(HomeIntent.ClickAlarmBanner) },
-        onAlarmCancelClick = { viewModel.onIntent(HomeIntent.CancelAlarm) },
         onFavoriteRouteClick = { busRoute -> viewModel.onIntent(HomeIntent.ClickFavoriteRoute(busRoute)) },
         onFavoriteNodeClick = { busNode -> viewModel.onIntent(HomeIntent.ClickFavoriteNode(busNode)) },
     )
@@ -99,7 +87,6 @@ private fun HomeScreen(
     onRecentRouteSearchDelete: (Long) -> Unit,
     onRecentNodeSearchDelete: (Long) -> Unit,
     onAlarmBannerClick: () -> Unit,
-    onAlarmCancelClick: () -> Unit,
     onFavoriteRouteClick: (BusRoute) -> Unit,
     onFavoriteNodeClick: (BusNode) -> Unit,
 ) {
@@ -167,8 +154,6 @@ private fun HomeScreen(
             )
         } else {
             state.alarmInfo?.let { alarmInfo ->
-                // FIXME: 현재는 배너 클릭 시 AlarmRingScreen으로 진입.
-                //        실제로는 버스가 목적지에 근접할 때 알람 이벤트로 강제 전환해야 함.
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -179,7 +164,6 @@ private fun HomeScreen(
                         destNodeName = alarmInfo.destNodeName,
                         stopsBeforeAlarm = alarmInfo.stopsBeforeAlarm,
                         onClick = onAlarmBannerClick,
-                        onCancelClick = onAlarmCancelClick,
                     )
                 }
             }
@@ -225,7 +209,6 @@ private fun HomeScreenPreview() {
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
-            onAlarmCancelClick = {},
             onFavoriteRouteClick = {},
             onFavoriteNodeClick = {},
         )
@@ -250,7 +233,6 @@ private fun HomeScreenPrevSearchPreview() {
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
-            onAlarmCancelClick = {},
             onFavoriteRouteClick = {},
             onFavoriteNodeClick = {},
         )
@@ -295,7 +277,6 @@ private fun HomeScreenSearchBusTabPreview() {
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
-            onAlarmCancelClick = {},
             onFavoriteRouteClick = {},
             onFavoriteNodeClick = {},
         )
@@ -338,7 +319,6 @@ private fun HomeScreenSearchStopTabPreview() {
             onRecentRouteSearchDelete = {},
             onRecentNodeSearchDelete = {},
             onAlarmBannerClick = {},
-            onAlarmCancelClick = {},
             onFavoriteRouteClick = {},
             onFavoriteNodeClick = {},
         )
