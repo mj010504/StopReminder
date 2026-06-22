@@ -1,10 +1,11 @@
-package com.choiminjun.home.alarmsetting
+package com.choiminjun.alarm.alarmsetting
 
 import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -56,13 +57,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.choiminjun.alarm.R
 import com.choiminjun.designsystem.component.SRIconButton
 import com.choiminjun.designsystem.theme.SRTheme
 import com.choiminjun.designsystem.theme.Spacing
 import com.choiminjun.domain.model.bus.BusNode
 import com.choiminjun.domain.model.bus.CityCode
-import com.choiminjun.home.R
-import com.choiminjun.home.service.startAlarmService
 import com.choiminjun.designsystem.R as DesignR
 
 private val StopItemHeight: Dp = 68.dp
@@ -79,45 +79,72 @@ internal fun AlarmSettingRoute(
     val context = LocalContext.current
     var pendingAlarm by remember { mutableStateOf<AlarmSettingSideEffect.AlarmConfirmed?>(null) }
     var showPermissionSheet by remember { mutableStateOf(false) }
+    var showLocationPermissionSheet by remember { mutableStateOf(false) }
 
     val notificationPermLauncher = rememberLauncherForActivityResult(RequestPermission()) { granted ->
+        val alarm = pendingAlarm
+        pendingAlarm = null
         if (granted) {
-            pendingAlarm?.let { effect ->
-                startAlarmService(context, effect.routeNo, effect.nodeName)
+            alarm?.let { effect ->
                 onAlarmSet(effect.routeNo, effect.nodeName)
             }
         } else {
             showPermissionSheet = true
         }
+    }
+
+    fun checkAndStartWithNotificationPerm(effect: AlarmSettingSideEffect.AlarmConfirmed) {
+        val hasNotificationPerm = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+            )
+        when {
+            hasNotificationPerm -> {
+                onAlarmSet(effect.routeNo, effect.nodeName)
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                context as Activity,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) -> showPermissionSheet = true
+
+            else -> {
+                pendingAlarm = effect
+                notificationPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    val locationPermLauncher = rememberLauncherForActivityResult(RequestPermission()) { granted ->
+        val alarm = pendingAlarm
         pendingAlarm = null
+        if (granted) {
+            alarm?.let { checkAndStartWithNotificationPerm(it) }
+        } else {
+            showLocationPermissionSheet = true
+        }
     }
 
     viewModel.collectSideEffect { effect ->
         when (effect) {
             AlarmSettingSideEffect.NavigateBack -> onBackClick()
             is AlarmSettingSideEffect.AlarmConfirmed -> {
-                val hasPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || (
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ) == PackageManager.PERMISSION_GRANTED
-                    )
+                val hasLocationPerm = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
                 when {
-                    hasPermission -> {
-                        startAlarmService(context, effect.routeNo, effect.nodeName)
-                        onAlarmSet(effect.routeNo, effect.nodeName)
-                    }
-
+                    hasLocationPerm -> checkAndStartWithNotificationPerm(effect)
                     ActivityCompat.shouldShowRequestPermissionRationale(
                         context as Activity,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ) -> {
-                        showPermissionSheet = true
-                    }
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                    ) -> showLocationPermissionSheet = true
 
                     else -> {
                         pendingAlarm = effect
-                        notificationPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        locationPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
                 }
             }
@@ -142,6 +169,16 @@ internal fun AlarmSettingRoute(
             onDismiss = { showPermissionSheet = false },
         )
     }
+
+    if (showLocationPermissionSheet) {
+        LocationPermissionBottomSheet(
+            onConfirm = {
+                showLocationPermissionSheet = false
+                openAppSettings(context)
+            },
+            onDismiss = { showLocationPermissionSheet = false },
+        )
+    }
 }
 
 private fun openNotificationSettings(context: Context) {
@@ -150,6 +187,77 @@ private fun openNotificationSettings(context: Context) {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
         },
     )
+}
+
+private fun openAppSettings(context: Context) {
+    context.startActivity(
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LocationPermissionBottomSheet(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = SRTheme.colors.background,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.space20)
+                .padding(bottom = Spacing.space32),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.space12),
+        ) {
+            Text(
+                text = stringResource(R.string.location_permission_title),
+                style = SRTheme.typography.bodyXMM,
+                color = SRTheme.colors.textPrimary,
+            )
+            Text(
+                text = stringResource(R.string.location_permission_message),
+                style = SRTheme.typography.bodySR,
+                color = SRTheme.colors.textSecondary,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(Spacing.space8))
+            Button(
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SRTheme.colors.blue50),
+            ) {
+                Text(
+                    text = stringResource(R.string.location_permission_go_to_settings),
+                    style = SRTheme.typography.bodyMSB,
+                    color = SRTheme.colors.white,
+                    modifier = Modifier.padding(vertical = Spacing.space8),
+                )
+            }
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SRTheme.colors.coolNeutral95),
+                elevation = null,
+            ) {
+                Text(
+                    text = stringResource(R.string.alarm_setting_cancel),
+                    style = SRTheme.typography.bodyMSB,
+                    color = SRTheme.colors.textSecondary,
+                    modifier = Modifier.padding(vertical = Spacing.space8),
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -260,32 +368,45 @@ private fun AlarmSettingScreen(
                 CircularProgressIndicator(color = SRTheme.colors.blue50)
             }
         } else {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.space20),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.space4),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = Spacing.space20, vertical = Spacing.space12),
+                verticalArrangement = Arrangement.spacedBy(Spacing.space8),
             ) {
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = ImageVector.vectorResource(DesignR.drawable.ic_bus),
-                    contentDescription = null,
-                    tint = SRTheme.colors.blue50,
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.space4),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = ImageVector.vectorResource(DesignR.drawable.ic_bus),
+                        contentDescription = null,
+                        tint = SRTheme.colors.blue50,
+                    )
+                    Text(
+                        text = state.routeNo,
+                        style = SRTheme.typography.bodySR,
+                        color = SRTheme.colors.blue50,
+                    )
+                }
+
+                if (state.boardingNodeName.isNotBlank()) {
+                    Text(
+                        text = stringResource(R.string.alarm_boarding_node_label, state.boardingNodeName),
+                        style = SRTheme.typography.bodySR,
+                        color = SRTheme.colors.textPrimary,
+                    )
+                }
+
                 Text(
-                    text = state.routeNo,
+                    text = stringResource(R.string.alarm_setting_select_stop_hint),
                     style = SRTheme.typography.bodySR,
-                    color = SRTheme.colors.blue50,
+                    color = SRTheme.colors.textSecondary,
                 )
             }
-
-            Text(
-                text = stringResource(R.string.alarm_setting_select_stop_hint),
-                style = SRTheme.typography.bodySR,
-                color = SRTheme.colors.textSecondary,
-                modifier = Modifier.padding(horizontal = Spacing.space20, vertical = Spacing.space8),
-            )
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 itemsIndexed(state.nodes, key = { _, node -> node.nodeId }) { index, node ->

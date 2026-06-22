@@ -37,3 +37,4 @@ include(":core:datastore")
 
 include(":feature")
 include(":feature:home")
+include(":feature:alarm")

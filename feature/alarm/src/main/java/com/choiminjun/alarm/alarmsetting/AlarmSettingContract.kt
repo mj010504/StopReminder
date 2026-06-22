@@ -1,4 +1,4 @@
-package com.choiminjun.home.alarmsetting
+package com.choiminjun.alarm.alarmsetting
 
 import com.choiminjun.base.UiIntent
 import com.choiminjun.base.UiSideEffect
@@ -8,6 +8,8 @@ import com.choiminjun.domain.model.bus.BusNode
 data class AlarmSettingState(
     val routeNo: String = "",
     val routeId: String = "",
+    val boardingNodeId: String = "",
+    val boardingNodeName: String = "",
     val isLoading: Boolean = false,
     val nodes: List<BusNode> = emptyList(),
     val selectedNode: BusNode? = null,
